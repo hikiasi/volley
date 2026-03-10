@@ -1,0 +1,574 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  trainer
+  admin
+}
+
+enum PlayLevel {
+  beginner
+  amateur
+  advanced
+  pro
+}
+
+model User {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegramId            BigInt    @unique @map("telegram_id")
+  role                  Role      @default(user)
+  firstName             String    @map("first_name") @db.VarChar(100)
+  lastName              String?   @map("last_name") @db.VarChar(100)
+  username              String?   @map("username") @db.VarChar(100)
+  photoUrl              String?   @map("photo_url") @db.Text
+  phone                 String?   @map("phone") @db.VarChar(20)
+  email                 String?   @map("email") @db.VarChar(255)
+  playLevel             PlayLevel? @map("play_level")
+  ensoLevelId           String?   @map("enso_level_id") @db.Uuid
+  ensoPoints            Int       @default(0) @map("enso_points")
+  notificationsEnabled  Boolean   @default(true) @map("notifications_enabled")
+  isBlocked             Boolean   @default(false) @map("is_blocked")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  lastActiveAt          DateTime? @map("last_active_at") @db.Timestamptz
+
+  invitedAdmins         AdminInvite[] @relation("Inviter")
+  bookings              Booking[]
+  payments              Payment[]
+  userCourses           UserCourse[]
+  videoReviews          VideoReview[] @relation("UserReviews")
+  trainerVideoReviews   VideoReview[] @relation("TrainerReviews")
+  notifications         Notification[]
+  achievements          UserAchievement[]
+  testResults           TestResult[]
+  auditLogs             AuditLog[]
+  createdPromoCodes     PromoCode[] @relation("AdminPromoCodes")
+  trainerProfile        Trainer?
+  managedCourses        Course[] @relation("TrainerCourses")
+  promoCodeUsages       PromoCodeUsage[]
+  dayProgress           UserDayProgress[]
+  exerciseProgress      UserExerciseProgress[]
+
+  @@index([role])
+  @@index([username])
+  @@map("users")
+}
+
+model AdminInvite {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invitedByUserId String   @map("invited_by_user_id") @db.Uuid
+  telegramId      BigInt?  @map("telegram_id")
+  role            Role
+  token           String   @unique @db.VarChar(64)
+  used            Boolean  @default(false)
+  expiresAt       DateTime @map("expires_at") @db.Timestamptz
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  inviter         User     @relation("Inviter", fields: [invitedByUserId], references: [id])
+
+  @@map("admin_invites")
+}
+
+enum CampStatus {
+  draft
+  published
+  full
+  completed
+  cancelled
+}
+
+model Camp {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                String     @unique @db.VarChar(255)
+  title               String     @db.VarChar(255)
+  description         String?    @db.Text
+  level               String     @db.VarChar(50)
+  city                String     @db.VarChar(100)
+  venueName           String?    @map("venue_name") @db.VarChar(255)
+  address             String?    @db.Text
+  lat                 Decimal?   @db.Decimal(10, 8)
+  lng                 Decimal?   @db.Decimal(11, 8)
+  yandexMapsUrl       String?    @map("yandex_maps_url") @db.Text
+  startDate           DateTime   @map("start_date") @db.Date
+  endDate             DateTime   @map("end_date") @db.Date
+  durationDays        Int        @map("duration_days")
+  basePrice           Int        @map("base_price")
+  depositAmount       Int?       @map("deposit_amount")
+  maxParticipants     Int        @map("max_participants")
+  currentParticipants Int        @default(0) @map("current_participants")
+  status              CampStatus @default(draft)
+  coverImageUrl       String?    @map("cover_image_url") @db.Text
+  gallery             Json?      @db.JsonB
+  assemblyTime        DateTime?  @map("assembly_time") @db.Time
+  startTime           DateTime?  @map("start_time") @db.Time
+  whatToBring         Json?      @map("what_to_bring") @db.JsonB
+  whatsIncluded       Json?      @map("whats_included") @db.JsonB
+  hotMessage          String?    @map("hot_message") @db.VarChar(500)
+  rating              Decimal?   @db.Decimal(3, 2)
+  reviewsCount        Int        @default(0) @map("reviews_count")
+  organizerPhone      String?    @map("organizer_phone") @db.VarChar(20)
+  organizerTelegram   String?    @map("organizer_telegram") @db.VarChar(100)
+  icsFileUrl          String?    @map("ics_file_url") @db.Text
+  participantsChatUrl String?    @map("participants_chat_url") @db.Text
+  memoUrl             String?    @map("memo_url") @db.Text
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  bookings            Booking[]
+  trainers            CampTrainer[]
+  days                CampDay[]
+  dayOptions          CampDayOption[]
+
+  @@index([status])
+  @@index([startDate])
+  @@index([city])
+  @@map("camps")
+}
+
+model CampDay {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campId      String   @map("camp_id") @db.Uuid
+  date        DateTime @db.Date
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+
+  camp        Camp     @relation(fields: [campId], references: [id])
+
+  @@map("camp_days")
+}
+
+model CampDayOption {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campId      String @map("camp_id") @db.Uuid
+  title       String @db.VarChar(255)
+  price       Int    @map("price")
+
+  camp        Camp   @relation(fields: [campId], references: [id])
+
+  @@map("camp_day_options")
+}
+
+model Trainer {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @unique @map("user_id") @db.Uuid
+  name        String   @db.VarChar(255)
+  bio         String?  @db.Text
+  photoUrl    String?  @map("photo_url") @db.Text
+  specialization String? @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user        User     @relation(fields: [userId], references: [id])
+  camps       CampTrainer[]
+
+  @@map("trainers")
+}
+
+model CampTrainer {
+  campId    String @map("camp_id") @db.Uuid
+  trainerId String @map("trainer_id") @db.Uuid
+
+  camp      Camp    @relation(fields: [campId], references: [id])
+  trainer   Trainer @relation(fields: [trainerId], references: [id])
+
+  @@id([campId, trainerId])
+  @@map("camp_trainers")
+}
+
+enum BookingStatus {
+  pre_booked
+  deposit_paid
+  fully_paid
+  cancelled
+  refunded
+}
+
+enum PaymentType {
+  full
+  deposit
+  installment
+}
+
+model Booking {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  campId            String        @map("camp_id") @db.Uuid
+  status            BookingStatus
+  paymentType       PaymentType   @map("payment_type")
+  baseAmount        Int           @map("base_amount")
+  optionsAmount     Int           @map("options_amount")
+  discountAmount    Int           @map("discount_amount")
+  totalAmount       Int           @map("total_amount")
+  paidAmount        Int           @map("paid_amount")
+  remainingAmount   Int           @map("remaining_amount")
+  promoCodeId       String?       @map("promo_code_id") @db.Uuid
+  preBookedAt       DateTime?     @map("pre_booked_at") @db.Timestamptz
+  preBookExpiresAt  DateTime?     @map("pre_book_expires_at") @db.Timestamptz
+  pdpConsent        Boolean       @map("pdp_consent")
+  waiverConsent     Boolean       @map("waiver_consent")
+  photoVideoConsent Boolean?      @map("photo_video_consent")
+  selectedDayIds    Json?         @map("selected_day_ids") @db.JsonB
+  notes             String?       @db.Text
+  receiptUrl        String?       @map("receipt_url") @db.Text
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  user              User          @relation(fields: [userId], references: [id])
+  camp              Camp          @relation(fields: [campId], references: [id])
+  payments          Payment[]
+  promoCode         PromoCode?    @relation(fields: [promoCodeId], references: [id])
+
+  @@map("bookings")
+}
+
+enum PaymentStatus {
+  pending
+  waiting_for_capture
+  succeeded
+  cancelled
+  refunded
+}
+
+enum PaymentMethod {
+  sbp
+  bank_card
+  yoo_money
+  installment
+}
+
+model Payment {
+  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId         String?       @map("booking_id") @db.Uuid
+  userCourseId      String?       @map("user_course_id") @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  yookassaPaymentId String?       @map("yookassa_payment_id") @db.VarChar(255)
+  amount            Int
+  currency          String        @default("RUB") @db.VarChar(3)
+  status            PaymentStatus
+  paymentMethod     PaymentMethod? @map("payment_method")
+  description       String?       @db.Text
+  confirmationUrl   String?       @map("confirmation_url") @db.Text
+  metadata          Json?         @db.JsonB
+  capturedAt        DateTime?     @map("captured_at") @db.Timestamptz
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  booking           Booking?      @relation(fields: [bookingId], references: [id])
+  userCourse        UserCourse?   @relation(fields: [userCourseId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+enum CourseCategory {
+  jump
+  speed
+  upper_body
+  free
+}
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+}
+
+model Course {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug              String         @unique @db.VarChar(255)
+  title             String         @db.VarChar(255)
+  category          CourseCategory
+  description       String?        @db.Text
+  expectedResult    String?        @map("expected_result") @db.VarChar(255)
+  level             CourseLevel
+  durationWeeks     Int            @map("duration_weeks")
+  minutesPerDay     String?        @map("minutes_per_day") @db.VarChar(50)
+  price             Int
+  installmentPrice  Int?           @map("installment_price")
+  coverImageUrl     String?        @map("cover_image_url") @db.Text
+  previewVideoUrl   String?        @map("preview_video_url") @db.Text
+  trainerId         String         @map("trainer_id") @db.Uuid
+  requirements      String?        @db.Text
+  suitableFor       Json?          @map("suitable_for") @db.JsonB
+  notSuitableFor    Json?          @map("not_suitable_for") @db.JsonB
+  refundDays        Int            @default(7) @map("refund_days")
+  status            CourseStatus   @default(draft)
+  rating            Decimal?       @db.Decimal(3, 2)
+  reviewsCount      Int            @default(0) @map("reviews_count")
+  isFeatured        Boolean        @default(false) @map("is_featured")
+  sortOrder         Int            @default(0) @map("sort_order")
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+
+  trainer           User           @relation("TrainerCourses", fields: [trainerId], references: [id])
+  weeks             CourseWeek[]
+  userCourses       UserCourse[]
+
+  @@map("courses")
+}
+
+model CourseWeek {
+  id       String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseId String      @map("course_id") @db.Uuid
+  number   Int
+  title    String?     @db.VarChar(255)
+
+  course   Course      @relation(fields: [courseId], references: [id])
+  days     CourseDay[]
+
+  @@map("course_weeks")
+}
+
+model CourseDay {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseWeekId String      @map("course_week_id") @db.Uuid
+  number       Int
+  title        String?     @db.VarChar(255)
+  description  String?     @db.Text
+
+  week         CourseWeek  @relation(fields: [courseWeekId], references: [id])
+  exercises    CourseDayExercise[]
+  userProgress UserDayProgress[]
+  videoReviews VideoReview[]
+
+  @@map("course_days")
+}
+
+enum ExerciseCategory {
+  warmup
+  main
+  plyometric
+  cooldown
+  test
+}
+
+enum ExerciseDifficulty {
+  easy
+  medium
+  hard
+}
+
+model Exercise {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title               String             @db.VarChar(255)
+  category            ExerciseCategory
+  difficulty          ExerciseDifficulty
+  vimeoVideoId        String?            @map("vimeo_video_id") @db.VarChar(100)
+  videoDurationSeconds Int?              @map("video_duration_seconds")
+  thumbnailUrl        String?            @map("thumbnail_url") @db.Text
+  techniqueSteps      Json?              @map("technique_steps") @db.JsonB
+  commonMistakes      Json?              @map("common_mistakes") @db.JsonB
+  safetyNotes         Json?              @map("safety_notes") @db.JsonB
+  setsDefault         Int                @default(5) @map("sets_default")
+  repsDefault         Int                @default(0) @map("reps_default")
+  durationSeconds     Int?               @map("duration_seconds")
+  restSeconds         Int                @default(45) @map("rest_seconds")
+  createdAt           DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  courseDayExercises  CourseDayExercise[]
+  userExerciseProgress UserExerciseProgress[]
+
+  @@map("exercises")
+}
+
+model CourseDayExercise {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  courseDayId String   @map("course_day_id") @db.Uuid
+  exerciseId  String   @map("exercise_id") @db.Uuid
+  sortOrder   Int      @map("sort_order")
+  sets        Int?
+  reps        Int?
+  duration    Int?
+  rest        Int?
+
+  day         CourseDay @relation(fields: [courseDayId], references: [id])
+  exercise    Exercise  @relation(fields: [exerciseId], references: [id])
+
+  @@map("course_day_exercises")
+}
+
+enum UserCourseStatus {
+  active
+  completed
+  expired
+  refunded
+}
+
+model UserCourse {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String           @map("user_id") @db.Uuid
+  courseId    String           @map("course_id") @db.Uuid
+  status      UserCourseStatus @default(active)
+  purchasedAt DateTime         @default(now()) @map("purchased_at") @db.Timestamptz
+  expiresAt   DateTime?        @map("expires_at") @db.Timestamptz
+
+  user        User             @relation(fields: [userId], references: [id])
+  course      Course           @relation(fields: [courseId], references: [id])
+  payments    Payment[]
+  dayProgress UserDayProgress[]
+  videoReviews VideoReview[]
+
+  @@map("user_courses")
+}
+
+model UserDayProgress {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  userCourseId String    @map("user_course_id") @db.Uuid
+  courseDayId  String    @map("course_day_id") @db.Uuid
+  completedAt  DateTime  @default(now()) @map("completed_at") @db.Timestamptz
+  rpe          Int?
+
+  user         User      @relation(fields: [userId], references: [id])
+  userCourse   UserCourse @relation(fields: [userCourseId], references: [id])
+  courseDay    CourseDay @relation(fields: [courseDayId], references: [id])
+
+  @@map("user_day_progress")
+}
+
+model UserExerciseProgress {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  exerciseId  String   @map("exercise_id") @db.Uuid
+  viewedAt    DateTime @default(now()) @map("viewed_at") @db.Timestamptz
+
+  user        User     @relation(fields: [userId], references: [id])
+  exercise    Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@map("user_exercise_progress")
+}
+
+model TestResult {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  testName  String   @map("test_name") @db.VarChar(100)
+  value     Decimal  @db.Decimal(10, 2)
+  unit      String   @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("test_results")
+}
+
+enum ReviewStatus {
+  pending
+  reviewed
+}
+
+model VideoReview {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String       @map("user_id") @db.Uuid
+  trainerId       String       @map("trainer_id") @db.Uuid
+  userCourseId    String       @map("user_course_id") @db.Uuid
+  courseDayId     String       @map("course_day_id") @db.Uuid
+  videoUrl        String       @map("video_url") @db.Text
+  userComment     String?      @map("user_comment") @db.Text
+  rpe             Int?
+  status          ReviewStatus @default(pending)
+  trainerFeedback String?      @map("trainer_feedback") @db.Text
+  trainerVideoUrl String?      @map("trainer_video_url") @db.Text
+  reviewedAt      DateTime?    @map("reviewed_at") @db.Timestamptz
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  user            User         @relation("UserReviews", fields: [userId], references: [id])
+  trainer         User         @relation("TrainerReviews", fields: [trainerId], references: [id])
+  userCourse      UserCourse   @relation(fields: [userCourseId], references: [id])
+  courseDay       CourseDay    @relation(fields: [courseDayId], references: [id])
+
+  @@map("video_reviews")
+}
+
+enum PromoDiscountType {
+  percentage
+  fixed_amount
+}
+
+enum PromoApplicableTo {
+  all
+  camps
+  courses
+  merch
+}
+
+model PromoCode {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code              String            @unique @db.VarChar(50)
+  discountType      PromoDiscountType @map("discount_type")
+  discountValue     Int               @map("discount_value")
+  maxUses           Int?              @map("max_uses")
+  usedCount         Int               @default(0) @map("used_count")
+  validFrom         DateTime          @map("valid_from") @db.Timestamptz
+  validUntil        DateTime          @map("valid_until") @db.Timestamptz
+  applicableTo      PromoApplicableTo @map("applicable_to")
+  specificItemId    String?           @map("specific_item_id") @db.Uuid
+  isActive          Boolean           @default(true) @map("is_active")
+  createdByAdminId  String            @map("created_by_admin_id") @db.Uuid
+
+  createdBy         User              @relation("AdminPromoCodes", fields: [createdByAdminId], references: [id])
+  bookings          Booking[]
+  usages            PromoCodeUsage[]
+
+  @@map("promo_codes")
+}
+
+model PromoCodeUsage {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  promoCodeId String   @map("promo_code_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  usedAt      DateTime @default(now()) @map("used_at") @db.Timestamptz
+
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("promo_code_usages")
+}
+
+model Notification {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  message     String   @db.Text
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model UserAchievement {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  achievementId String   @map("achievement_id") @db.Uuid
+  earnedAt      DateTime @default(now()) @map("earned_at") @db.Timestamptz
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("user_achievements")
+}
+
+model AuditLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  action    String   @db.VarChar(255)
+  entity    String   @db.VarChar(100)
+  entityId  String?  @map("entity_id") @db.Uuid
+  details   Json?    @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
