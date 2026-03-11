@@ -41,6 +41,7 @@ model User {
   // Обязательные для оплаты
   phone                 String?   @db.VarChar(20)
   email                 String?   @db.VarChar(255)
+  password              String?   @db.Text
 
   // Профиль игрока
   playLevel             PlayLevel? @map("play_level")

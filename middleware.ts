@@ -7,6 +7,7 @@ export async function middleware(request: NextRequest) {
 
   if (request.nextUrl.pathname.startsWith('/admin')) {
     if (!token) {
+      // In production, you might want to redirect to a login page
       return NextResponse.redirect(new URL('/', request.url));
     }
 

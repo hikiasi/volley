@@ -1,4 +1,6 @@
-import { getCampBySlug } from "@/lib/camps";
+"use client";
+
+import { useEffect, useState } from "react";
 import { ChevronLeft, Calendar, MapPin, Info, CheckCircle2, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -7,36 +9,73 @@ import { ru } from "date-fns/locale";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Camp } from "@prisma/client";
 
-const MOCK_CAMP: Partial<Camp> = {
-  id: "1",
-  slug: 'moscow-october-2024',
-  title: 'Москва · Октябрь',
-  city: 'Москва',
-  address: 'м. Сокольники, ул. Лужники, 24с1',
-  level: 'Shoshin',
-  startDate: new Date('2024-10-12'),
-  endDate: new Date('2024-10-14'),
-  durationDays: 3,
-  basePrice: 1500000,
-  depositAmount: 500000,
-  maxParticipants: 25,
-  currentParticipants: 18,
-  description: "Интенсивный курс по прыжку и технике нападения. 3 дня плотной работы с топовыми тренерами.",
-  hotMessage: '🔥 Спец-кэмп «Power Jump» · −10% до 12.10',
-  whatsIncluded: ["3 тренировки в день", "Аренда зала", "Спортивный инвентарь", "Фирменная майка"],
-  whatToBring: ["Сменная обувь", "Вода", "Наколенники"],
-};
+export default function CampDetailPage({ params }: { params: { slug: string } }) {
+  const [camp, setCamp] = useState<Camp | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default async function CampDetailPage({ params }: { params: { slug: string } }) {
-  let camp: Partial<Camp> | null = null;
-  try {
-    camp = await getCampBySlug(params.slug);
-    if (!camp) camp = MOCK_CAMP;
-  } catch {
-    camp = MOCK_CAMP;
-  }
+  useEffect(() => {
+    async function fetchCamp() {
+      try {
+        const res = await fetch(`/api/camps/${params.slug}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCamp(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCamp();
+  }, [params.slug]);
 
-  if (!camp) return null;
+  const handlePreBook = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/camps/${params.slug}/pre-book`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        alert("Место забронировано на 24 часа! Мы отправили уведомление в Telegram.");
+      } else {
+        const err = await res.json();
+        alert(`Ошибка: ${err.error}`);
+      }
+    } catch {
+        alert("Произошла ошибка при бронировании");
+    }
+  };
+
+  const handlePay = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`/api/camps/${params.slug}/book`, {
+          method: "POST",
+          headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ paymentType: "full" })
+        });
+        if (res.ok) {
+          const { paymentUrl } = await res.json();
+          window.location.href = paymentUrl;
+        } else {
+          const err = await res.json();
+          alert(`Ошибка: ${err.error}`);
+        }
+      } catch {
+          alert("Произошла ошибка при создании платежа");
+      }
+  };
+
+  if (loading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white font-bold uppercase">Загрузка...</div>;
+  if (!camp) return <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 text-center text-white">
+      <h1 className="text-xl font-black mb-4 uppercase">Кэмп не найден</h1>
+      <Link href="/camps" className="bg-[#FF2D2D] text-white px-8 py-3 rounded-2xl font-black uppercase text-sm">В каталог</Link>
+  </div>;
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-32">
@@ -86,7 +125,7 @@ export default async function CampDetailPage({ params }: { params: { slug: strin
            <div className="flex justify-between items-center">
              <span className="text-xs font-bold text-white/50 uppercase">Полная стоимость</span>
              <span className="text-xl font-black text-white">
-               {((camp.basePrice ?? 0) / 100).toLocaleString('ru-RU')} ₽
+               {(camp.basePrice / 100).toLocaleString('ru-RU')} ₽
              </span>
            </div>
            {camp.depositAmount && (
@@ -145,9 +184,18 @@ export default async function CampDetailPage({ params }: { params: { slug: strin
       {/* Bottom Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent backdrop-blur-lg border-t border-white/5 safe-area-pb">
         <div className="max-w-[430px] mx-auto flex gap-3">
-          <button className="flex-1 bg-white text-black h-14 rounded-2xl font-black uppercase text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-            <CreditCard className="w-5 h-5" />
+          <button
+            onClick={handlePreBook}
+            className="flex-1 bg-white/10 text-white h-14 rounded-2xl font-black uppercase text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 border border-white/5"
+          >
             Предбронь
+          </button>
+          <button
+            onClick={handlePay}
+            className="flex-[1.5] bg-[#FF2D2D] text-white h-14 rounded-2xl font-black uppercase text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <CreditCard className="w-5 h-5" />
+            Оплатить
           </button>
         </div>
       </div>

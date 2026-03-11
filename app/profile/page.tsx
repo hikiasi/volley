@@ -1,20 +1,58 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ChevronLeft, Settings, Award, Calendar, PlayCircle, CreditCard, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
 
-const MOCK_USER = {
-  firstName: "Константин",
-  username: "voley_king",
-  ensoLevel: "Shugyosha",
-  ensoPoints: 1250,
-  nextLevelPoints: 2000,
-  campsCount: 3,
-  coursesCount: 2,
-};
+interface ProfileUser {
+  id: string;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  photoUrl?: string;
+  ensoPoints?: number;
+  ensoLevel?: { name: string };
+  bookings?: unknown[];
+  userCourses?: unknown[];
+}
 
-export default async function ProfilePage() {
-  const user = MOCK_USER; // Should be fetched from session in real app
+export default function ProfilePage() {
+  const [user, setUser] = useState<ProfileUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const token = localStorage.getItem("token"); // or from cookies
+        const res = await fetch("/api/user/profile", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  if (loading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white font-bold">Загрузка...</div>;
+  if (!user) return <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center p-4 text-center">
+    <h1 className="text-xl font-black mb-4 uppercase">Вы не авторизованы</h1>
+    <Link href="/" className="bg-[#FF2D2D] text-white px-8 py-3 rounded-2xl font-black uppercase text-sm">На главную</Link>
+  </div>;
+
+  const ensoPoints = user.ensoPoints || 0;
+  const nextLevelPoints = 2000; // Mock
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
@@ -32,15 +70,15 @@ export default async function ProfilePage() {
         {/* User Card */}
         <section className="flex items-center gap-4">
            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#FF2D2D] to-[#800000] p-1">
-             <div className="w-full h-full rounded-[14px] bg-[#0A0A0A] flex items-center justify-center text-3xl">
-               🏐
+             <div className="w-full h-full rounded-[14px] bg-[#0A0A0A] flex items-center justify-center text-3xl overflow-hidden">
+               {user.photoUrl ? <img src={user.photoUrl} className="w-full h-full object-cover" alt="Avatar" /> : "🏐"}
              </div>
            </div>
            <div>
-             <h2 className="text-xl font-black uppercase italic italic">{user.firstName}</h2>
-             <div className="text-xs text-white/40 font-medium">@{user.username}</div>
+             <h2 className="text-xl font-black uppercase italic italic">{user.firstName} {user.lastName}</h2>
+             <div className="text-xs text-white/40 font-medium">{user.username ? `@${user.username}` : user.email}</div>
              <Badge className="mt-2 bg-[#FF2D2D] text-[9px] font-black uppercase px-2 py-0.5 border-none">
-               {user.ensoLevel}
+               {user.ensoLevel?.name || "Shoshin"}
              </Badge>
            </div>
         </section>
@@ -52,14 +90,14 @@ export default async function ProfilePage() {
                <Award className="w-4 h-4 text-[#FF2D2D]" />
                <span className="text-[10px] font-black uppercase tracking-wider">Путь Энсо</span>
              </div>
-             <span className="text-[10px] font-black text-white/40 uppercase">Уровень 2</span>
+             <span className="text-[10px] font-black text-white/40 uppercase">Уровень 1</span>
           </div>
           <div className="space-y-1.5">
             <div className="flex justify-between text-[11px] font-bold italic">
-               <span>{user.ensoPoints} pts</span>
-               <span className="text-white/30">{user.nextLevelPoints} pts</span>
+               <span>{ensoPoints} pts</span>
+               <span className="text-white/30">{nextLevelPoints} pts</span>
             </div>
-            <Progress value={(user.ensoPoints / user.nextLevelPoints) * 100} className="flex-col gap-0 h-auto">
+            <Progress value={(ensoPoints / nextLevelPoints) * 100} className="flex-col gap-0 h-auto">
               <ProgressTrack className="h-2 bg-white/5">
                 <ProgressIndicator className="bg-gradient-to-r from-[#FF2D2D] to-[#FF8080]" />
               </ProgressTrack>
@@ -70,11 +108,11 @@ export default async function ProfilePage() {
         {/* Menu Grid */}
         <section className="grid grid-cols-2 gap-3">
            <div className="glass-card p-4 space-y-1">
-              <div className="text-xl font-black italic">{user.campsCount}</div>
+              <div className="text-xl font-black italic">{user.bookings?.length || 0}</div>
               <div className="text-[10px] font-bold text-white/40 uppercase">Мои кэмпы</div>
            </div>
            <div className="glass-card p-4 space-y-1">
-              <div className="text-xl font-black italic">{user.coursesCount}</div>
+              <div className="text-xl font-black italic">{user.userCourses?.length || 0}</div>
               <div className="text-[10px] font-bold text-white/40 uppercase">Мои курсы</div>
            </div>
         </section>

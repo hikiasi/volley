@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     const token = jwt.sign(
       {
-        userId: user.id,
+        sub: user.id,
         telegramId: user.telegramId.toString(),
         role: user.role,
       },
@@ -57,7 +57,15 @@ export async function POST(req: NextRequest) {
       { expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as jwt.SignOptions["expiresIn"] }
     );
 
-    return NextResponse.json({ token, user: { ...user, telegramId: user.telegramId.toString() } });
+    const response = NextResponse.json({ token, user: { ...user, telegramId: user.telegramId.toString() } });
+    response.cookies.set("auth_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60
+    });
+
+    return response;
   } catch (error) {
     console.error("Auth error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
