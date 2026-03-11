@@ -69,6 +69,9 @@ model User {
   promoCodeUsages       PromoCodeUsage[]
   adminInvitesSent      AdminInvite[]        @relation("InvitedBy")
   auditLogs             AuditLog[]
+  waitlistEntries       WaitlistEntry[]
+  verificationCodes     VerificationCode[]
+  chatMessages          ChatMessage[]
 
   @@index([role])
   @@index([username])
@@ -146,6 +149,7 @@ model Camp {
   whatToBring          Json?       @map("what_to_bring") // [{"item":"Вода"}]
   whatsIncluded        Json?       @map("whats_included")
   hotMessage           String?     @map("hot_message") @db.VarChar(500)
+  parkingInfo          String?     @map("parking_info") @db.Text
 
   // Рейтинг
   rating               Decimal?    @db.Decimal(3, 2)
@@ -167,6 +171,8 @@ model Camp {
   days                 CampDay[]
   trainers             CampTrainer[]
   bookings             Booking[]
+  waitlistEntries      WaitlistEntry[]
+  chatMessages         ChatMessage[]
 
   @@index([status])
   @@index([startDate])
@@ -792,4 +798,46 @@ model AuditLog {
   @@index([userId])
   @@index([entityType, entityId])
   @@map("audit_log")
+}
+
+model WaitlistEntry {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  campId    String   @map("camp_id")
+  position  Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+  camp Camp @relation(fields: [campId], references: [id])
+
+  @@unique([userId, campId])
+  @@map("waitlist_entries")
+}
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String   // "phone" or "email"
+  code      String   @db.VarChar(10)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("verification_codes")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  campId    String   @map("camp_id")
+  userId    String   @map("user_id")
+  text      String?  @db.Text
+  type      String   @default("text") // "text", "system", "video", "image"
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  camp Camp @relation(fields: [campId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("chat_messages")
 }
