@@ -1,0 +1,1821 @@
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 1
+VOLLEYDZEN
+ты решаешь как играть и жить
+ТЕХНИЧЕСКОЕ ЗАДАНИЕ
+Telegram Mini App — Полная платформа для волейболистов
+
+Параметр Значение
+Документ Техническое задание (ТЗ) — Версия 2.0
+Дата Март 2025
+Платформа Telegram Mini App (WebApp)
+Frontend Next.js 14 (App Router) + TypeScript + Tailwind CSS +
+shadcn/ui
+Backend Node.js / Next.js API Routes + Prisma ORM
+База данных PostgreSQL 15
+Хостинг Timeweb Cloud (РФ, соответствие 152-ФЗ)
+Авторизация Telegram Web App Auth (HMAC-SHA256)
+Платежи ЮKassa — полная оплата, депозит, рассрочка
+«Сплит»
+Видеохостинг Vimeo (или аналог) — iframe embed
+Роли User / Trainer (куратор) / Admin
+Ожидаемая нагрузка До 500 пользователей (Фаза 1)
+
+© 2025 VOLLEYDZEN. Конфиденциально.
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 2
+СОДЕРЖАНИЕ
+Раздел
+1.   Введение, цели и ключевые решения 3
+2.   Общее описание продукта и пользовательские сценарии 5
+3.   Технический стек и архитектура 8
+4.   Авторизация через Telegram Web App 12
+5.   Ролевая модель: User / Trainer / Admin 14
+6.   Структура базы данных (полная схема) 16
+7.   REST API — полная документация эндпоинтов 27
+8.   Экраны и страницы приложения (UI/UX) 33
+9.   Платёжная система ЮKassa 44
+10.  Видеоконтент: Vimeo embed + защита доступа 48
+11.  Push-уведомления через Telegram Bot API 50
+12.  Административная панель (/admin) 53
+13.  Безопасность и 152-ФЗ 58
+14.  Деплой на Timeweb Cloud 61
+15.  Нефункциональные требования 64
+16.  Этапы разработки, оценка и дорожная карта 66
+17.  Открытые вопросы 70
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 3
+1. ВВЕДЕНИЕ, ЦЕЛИ И КЛЮЧЕВЫЕ РЕШЕНИЯ
+1.1 Контекст
+VOLLEYDZEN — бренд и платформа для волейболистов всех уровней, объединяющая
+более 12 500 участников в Telegram. Владелец бизнеса самостоятельно организует
+очные кэмпы (Москва, Санкт-Петербург, Нижний Новгород и другие города), продаёт
+онлайн-программы тренировок (прыжок, скорость, верх тела) и ведёт сообщество.
+На данный момент часть курсов реализована в PuzzleBot (3 программы: Прыжок PRO,
+Скорость 100, тест-неделя Верх тела). Платформа требует полноценного собственного
+приложения.
+
+1.2 Ключевые бизнес-решения (зафиксировано)
+✅  Архитектурные решения приняты
+Данные решения зафиксированы по результатам уточняющих вопросов и используются
+как основа ТЗ.
+
+# Решение Выбор Обоснование
+1 Бэкенд Кастомный Node.js + Next.js
+API + PostgreSQL + Prisma
+Соответствие 152-ФЗ (данные в
+РФ), полный контроль
+2 Хостинг Timeweb Cloud (Россия) Managed-сервис, РФ-юрисдикция,
+SLA 99.9%
+3 Старый код Пишем с нуля Надёжнее, современный стек, нет
+техдолга
+4 Видео Vimeo (iframe embed) Дёшево, быстро, CDN из коробки,
+доступ по ссылке
+5 Оплата ЮKassa: полная + депозит +
+рассрочка «Сплит»
+Все сценарии покрыты одним
+провайдером
+6 Перенос данных Удобная админка для ручного
+переноса
+Простота, не нужен парсер,
+владелец контролирует
+7 Роли User / Trainer / Admin Тренеры проверяют видео, ведут
+учеников
+8 Авторизация Только Telegram Web App Auth Бесшовно, без лишних форм
+9 Карты Yandex Maps API РФ-аудитория, работает стабильно
+10 Телефон/email Обязательный сбор в профиле Нужно для ОФД, фискальных
+документов
+11 Нагрузка (Фаза
+1)
+До 500 пользователей Небольшой сервер Timeweb Cloud,
+можно масштабировать
+
+1.3 Проблемы, которые решает продукт
+• Нет единой точки входа: запись на кэмп, оплата, курсы — в разных местах
+• Ручная обработка заявок и платежей отнимает время владельца
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 4
+• Нет трекинга прогресса участников и автоматических напоминаний
+• Нет брендированного пространства — всё «растворено» в Telegram
+• Сложно масштабировать: добавить новый кэмп или курс требует много ручной
+работы
+
+1.4 Цели проекта
+1. Создать Telegram Mini App — веб-приложение, открывающееся прямо в Telegram
+без выхода в браузер
+2. Фаза 1: кэмпы с записью и оплатой, онлайн-курсы с видео, личный кабинет,
+уведомления
+3. Реализовать административную панель по адресу /admin для управления всем
+контентом
+4. Интегрировать ЮKassa: полная оплата, депозит (предбронь 24ч), рассрочка через
+«Сплит»
+5. Фаза 2: мерч, офлайн тренировки, консультации, Путь Энсо, аналитика
+
+1.5 Метрики успеха
+Метрика Цель Срок
+Конверсия просмотр → запись на кэмп > 15% 3 мес после запуска
+Среднее время оформления брони < 3 минут С запуска
+Снижение ручной работы
+администратора
+> 70% С запуска
+Завершаемость онлайн-курсов > 55% 6 мес
+Возврат пользователей (DAU/MAU) > 35% 3 мес
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 5
+2. ОБЩЕЕ ОПИСАНИЕ ПРОДУКТА И
+ПОЛЬЗОВАТЕЛЬСКИЕ СЦЕНАРИИ
+2.1 Что такое Telegram Mini App
+Telegram Mini App (TMA) — это обычный веб-сайт на Next.js, который открывается внутри
+мессенджера Telegram через встроенный WebView. Пользователь нажимает на кнопку в
+боте — и приложение открывается прямо в Telegram, без перехода в браузер.
+Авторизация происходит автоматически через Telegram-аккаунт: никаких логинов,
+паролей, SMS.
+ℹ️  Техническое пояснение для заказчика
+С точки зрения пользователя — это мобильное приложение внутри Telegram. С точки
+зрения разработки — обычный Next.js сайт с REST API и базой данных. Разница только в
+том, что Telegram передаёт нам данные пользователя автоматически при открытии.
+
+2.2 Функциональные модули
+Модуль Описание Фаза
+🏕  Кэмпы Каталог, детальная страница, предбронь на 24ч,
+полная оплата / депозит / рассрочка, карта
+Yandex, .ics в календарь
+1
+🎓  Онлайн-
+курсы
+Каталог программ (прыжок, скорость, верх тела),
+видео Vimeo, трекинг прогресса, RPE, тесты
+1
+👤  Личный
+кабинет
+Профиль (телефон, email, уровень), мои кэмпы,
+курсы, платежи, достижения
+1
+🔔
+Уведомления
+Push через Telegram Bot API, рассылки, крон-задачи 1
+📘  Манифест Статичный текст философии бренда, редактируется
+из админки
+1
+🔧  Админ-
+панель
+/admin: кэмпы, курсы, пользователи, тренеры,
+рассылки, промокоды, управление admin'ами
+1
+🛒  Мерч Каталог товаров, оплата 2
+🏋  Офлайн
+тренировки
+Запись на групповые тренировки в зале 2
+💬
+Консультации
+Запись на личные консультации с тренером 2
+⭕  Путь Энсо Система уровней и прогресса пользователя 2
+
+2.3 Целевые пользователи
+Игрок (User)
+• Волейболисты amateur/advanced уровня, 18–45 лет
+• Активный пользователь Telegram, смартфон
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 6
+• Хочет улучшить прыжок, скорость, технику через структурированные тренировки
+• Готов платить за кэмпы и онлайн-курсы
+Тренер / Куратор (Trainer)
+• 1–3 человека, партнёры владельца
+• Ведёт учеников на курсах: проверяет видео-отчёты, даёт обратную связь
+• Видит прогресс своих учеников, получает уведомления о новых видео
+• Может создавать и редактировать курсы
+Администратор (Admin)
+• Владелец бизнеса и назначенные им люди
+• Полный доступ: создание кэмпов, курсов, управление пользователями, аналитика,
+рассылки
+• Может добавлять новых администраторов через панель
+
+2.4 Основные пользовательские сценарии
+Сценарий A: Новый пользователь → запись на кэмп
+6. Пользователь нажимает кнопку в Telegram-боте → открывается Mini App
+7. Автоматическая авторизация (данные из Telegram)
+8. Главный экран → «Календарь кэмпов» → выбирает кэмп
+9. Читает программу, смотрит тренеров, нажимает «Предбронь»
+10. Место зарезервировано на 24 часа → появляется страница оплаты
+11. Заполняет телефон/email (если первый раз), принимает согласия
+12. Выбирает способ оплаты: полная / депозит / рассрочка
+13. Оплачивает через ЮKassa (СБП или карта)
+14. Получает подтверждение в Telegram + PDF квитанцию
+15. Кэмп появляется в профиле в разделе «Мои кэмпы»
+
+Сценарий B: Покупка курса и прохождение тренировки
+16. Главный экран → «Атлетизм» → выбирает «Прыжок PRO — 6 недель»
+17. Читает описание, смотрит пробный День 1 бесплатно
+18. Нажимает «Купить» → оплачивает через ЮKassa
+19. Открывает «Неделя 3 · День 2» → видит список упражнений
+20. Нажимает на упражнение → открывается Vimeo-видео + инструкции
+21. Выполняет тренировку, отмечает упражнения галочками
+22. В конце выставляет RPE 1–10, нажимает «Завершить день»
+23. Если куплен коучинг — отправляет видео тренеру через форму в приложении
+
+Сценарий C: Тренер проверяет видео ученика
+24. Тренер получает уведомление в Telegram: «Новое видео от Ивана К., День 14»
+25. Открывает Mini App, заходит в раздел «Мои ученики»
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 7
+26. Видит видео и параметры (RPE, комментарий пользователя)
+27. Оставляет текстовый или голосовой отзыв
+28. Пользователь получает уведомление об ответе тренера
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 8
+3. ТЕХНИЧЕСКИЙ СТЕК И АРХИТЕКТУРА
+3.1 Стек технологий
+Слой Технология Версия Причина выбора
+Frontend +
+Backend
+Next.js (App Router) 14.x Монорепо, SSR/SSG, API Routes,
+TypeScript из коробки
+Язык TypeScript 5.x Строгая типизация, меньше
+ошибок, автодополнение
+UI Kit shadcn/ui + Tailwind
+CSS
+Latest Готовые компоненты, тёмная тема,
+полная кастомизация
+База данных PostgreSQL 15.x Надёжность, JSONB,
+полнотекстовый поиск, SQL
+ORM Prisma 5.x Типизированные запросы,
+автомиграции, Prisma Studio для
+отладки
+Хостинг Timeweb Cloud - Россия, 152-ФЗ, managed
+PostgreSQL, S3-совместимое
+хранилище
+Видеохостинг Vimeo (iframe) - CDN, защита от скачивания, embed
+API, доступно в РФ
+Оплата ЮKassa - Карты, СБП, рассрочка «Сплит»,
+вебхуки, 54-ФЗ
+Push Telegram Bot API - Нативно для TMA, никаких
+FCM/APNs
+Карты Yandex Maps JS API - РФ аудитория, геокодирование,
+маршруты
+Кэш / очередь Redis (Timeweb
+Cloud)
+- Rate limiting, кэш каталогов,
+очередь рассылок
+Email SendGrid / Unisender - Транзакционные письма
+(квитанции, PDF)
+Мониторинг
+ошибок
+Sentry - Трекинг багов в проде, алерты
+CI/CD GitHub Actions - Автотесты + автодеплой на
+Timeweb Cloud при пуше в main
+
+3.2 Структура репозитория
+Монорепозиторий — весь проект в одном GitHub-репозитории.
+volleydzen/
+├── app/                          # Next.js App Router
+│   ├── (tma)/                    # Telegram Mini App (пользовательская часть)
+│   │   ├── layout.tsx            # Инициализация Telegram SDK, глобальные стили
+│   │   ├── page.tsx              # Главная страница (плитки)
+│   │   ├── camps/
+│   │   │   ├── page.tsx          # Каталог кэмпов
+│   │   │   └── [id]/
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 9
+│   │   │       ├── page.tsx      # Детальная страница кэмпа
+│   │   │       ├── checkout/page.tsx  # Страница оплаты
+│   │   │       └── location/page.tsx  # Карта и адрес
+│   │   ├── courses/
+│   │   │   ├── page.tsx          # Каталог курсов
+│   │   │   └── [id]/
+│   │   │       ├── page.tsx      # Детальная страница курса
+│   │   │       └── day/[dayNum]/page.tsx  # Тренировочный день
+│   │   ├── exercises/[id]/page.tsx        # Видео упражнения
+│   │   ├── profile/page.tsx       # Личный кабинет
+│   │   ├── trainer/               # Кабинет тренера
+│   │   │   ├── students/page.tsx
+│   │   │   └── reviews/page.tsx
+│   │   ├── news/page.tsx          # Новости и рассылки
+│   │   └── manifest/page.tsx      # Манифест
+│   ├── admin/                    # Административная панель
+│   │   ├── layout.tsx            # Admin layout + auth guard
+│   │   ├── page.tsx              # Dashboard
+│   │   ├── camps/                # Управление кэмпами
+│   │   ├── courses/              # Управление курсами
+│   │   ├── users/                # Пользователи
+│   │   ├── trainers/             # Тренеры
+│   │   ├── payments/             # Платежи
+│   │   ├── promo-codes/          # Промокоды
+│   │   ├── notifications/        # Рассылки
+│   │   └── admins/               # Управление администраторами
+│   └── api/                      # REST API
+│       ├── auth/                 # Авторизация TMA + Admin
+│       ├── camps/
+│       ├── courses/
+│       ├── user/
+│       ├── trainer/
+│       ├── payments/
+│       ├── admin/
+│       └── webhook/              # ЮKassa + Telegram Bot вебхуки
+├── components/
+│   ├── ui/                       # shadcn/ui компоненты
+│   ├── tma/                      # TMA-специфичные компоненты
+│   ├── trainer/                  # Компоненты кабинета тренера
+│   └── admin/                    # Компоненты админки
+├── lib/
+│   ├── db.ts                     # Prisma Client (singleton)
+│   ├── telegram.ts               # Валидация initData, Bot API helper
+│   ├── yookassa.ts               # ЮKassa SDK wrapper
+│   ├── redis.ts                  # Redis client
+│   ├── s3.ts                     # Timeweb Cloud Storage
+│   └── pdf.ts                    # Генерация PDF квитанций
+├── prisma/
+│   ├── schema.prisma             # Полная схема БД
+│   └── migrations/
+└── .env.local                    # Переменные окружения
+
+3.3 Переменные окружения (.env.local)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 10
+# ─── База данных ───────────────────────────────────────────
+DATABASE_URL="postgresql://user:pass@timeweb-host:5432/volleydzen"
+REDIS_URL="redis://timeweb-redis-host:6379"
+
+# ─── Telegram ──────────────────────────────────────────────
+TELEGRAM_BOT_TOKEN="123456:ABC-DEF..."   # Токен из @BotFather
+TELEGRAM_BOT_SECRET="..."                # Для HMAC верификации initData
+NEXT_PUBLIC_TMA_URL="https://t.me/volleydzen_bot/app"
+
+# ─── Платежи ───────────────────────────────────────────────
+YOOKASSA_SHOP_ID="..."
+YOOKASSA_SECRET_KEY="..."
+YOOKASSA_RETURN_URL="https://volleydzen.ru/payment/success"
+YOOKASSA_WEBHOOK_IP_WHITELIST="185.71.76.0/27,185.71.77.0/27"
+
+# ─── Хранилище (Timeweb S3) ────────────────────────────────
+S3_ENDPOINT="https://s3.timeweb.cloud"
+S3_BUCKET="volleydzen-media"
+S3_ACCESS_KEY="..."
+S3_SECRET_KEY="..."
+
+# ─── Карты ─────────────────────────────────────────────────
+NEXT_PUBLIC_YANDEX_MAPS_KEY="..."
+
+# ─── JWT ───────────────────────────────────────────────────
+JWT_SECRET="min-32-chars-random-string"
+JWT_EXPIRES_IN="7d"
+
+# ─── Email ─────────────────────────────────────────────────
+SENDGRID_API_KEY="..."
+EMAIL_FROM="noreply@volleydzen.ru"
+
+# ─── Мониторинг ────────────────────────────────────────────
+SENTRY_DSN="https://..."
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 11
+4. АВТОРИЗАЦИЯ ЧЕРЕЗ TELEGRAM WEB APP
+4.1 Принцип работы
+Когда пользователь открывает Mini App, Telegram SDK автоматически заполняет
+переменную window.Telegram.WebApp.initData — строку с данными пользователя,
+подписанную HMAC-SHA256 ключом, производным от токена бота. Это гарантирует
+подлинность данных без логина/пароля.
+⚠️  Безопасность
+Верификация initData ОБЯЗАТЕЛЬНО выполняется на сервере (не на клиенте). Клиентский
+код всегда может быть изменён через DevTools. Сервер проверяет HMAC-подпись перед
+выдачей JWT.
+
+4.2 Схема авторизационного потока
+29. Пользователь открывает Mini App → Telegram SDK устанавливает
+window.Telegram.WebApp.initData
+30. Frontend отправляет POST /api/auth/telegram с телом { "initData": "..." }
+31. Сервер верифицирует HMAC-SHA256 подпись initData через
+TELEGRAM_BOT_TOKEN
+32. Сервер проверяет auth_date — не старше 1 часа (защита от replay-атак)
+33. Сервер ищет пользователя по telegram_id. Если не найден — создаёт
+автоматически (авторегистрация)
+34. Сервер возвращает JWT access token (7 дней) и данные пользователя
+35. Frontend хранит JWT в памяти (React Context / Zustand store) — не в localStorage
+36. Все защищённые запросы к API отправляются с заголовком Authorization: Bearer
+<jwt>
+37. При истечении JWT — повторная авторизация через initData (бесшовно для
+пользователя)
+
+4.3 Реализация серверной валидации
+// lib/telegram.ts
+import crypto from "crypto";
+
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  language_code?: string;
+}
+
+export function validateTelegramInitData(initData: string): TelegramUser | null {
+  const params = new URLSearchParams(initData);
+  const hash = params.get("hash");
+  if (!hash) return null;
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 12
+
+  params.delete("hash");
+  const dataCheckString = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join("\n");
+
+  const secretKey = crypto
+    .createHmac("sha256", "WebAppData")
+    .update(process.env.TELEGRAM_BOT_TOKEN!)
+    .digest();
+
+  const expectedHash = crypto
+    .createHmac("sha256", secretKey)
+    .update(dataCheckString)
+    .digest("hex");
+
+  if (expectedHash !== hash) return null; // Подделка!
+
+  // Не старше 1 часа
+  const authDate = parseInt(params.get("auth_date") || "0");
+  if (Date.now() / 1000 - authDate > 3600) return null;
+
+  return JSON.parse(params.get("user") || "null");
+}
+
+4.4 Данные пользователя при первом входе
+Никакой формы регистрации нет. Аккаунт создаётся автоматически. Телефон и email
+запрашиваются позже — при первой попытке оформить запись на кэмп или купить курс.
+Поле Источник Обязательно Момент сбора
+telegram_id Telegram initData Да Авторизация
+first_name Telegram initData Да Авторизация
+last_name Telegram initData Нет Авторизация
+username Telegram initData Нет Авторизация
+photo_url Telegram initData Нет Авторизация
+phone Форма профиля ДА (для ОФД) Перед первой оплатой
+email Форма профиля ДА (для ОФД) Перед первой оплатой
+play_level Форма профиля Нет Приветственный онбординг
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 13
+5. РОЛЕВАЯ МОДЕЛЬ: USER / TRAINER / ADMIN
+5.1 Описание ролей
+Роль Кто Доступ
+user Обычный игрок TMA: главная, кэмпы, курсы, профиль, уведомления.
+Без /admin.
+trainer Тренер / куратор TMA: всё как user + кабинет тренера (ученики, видео,
+отзывы, создание курсов). Без /admin.
+admin Администратор TMA: всё + полный доступ к /admin (все разделы,
+включая управление пользователями, финансами,
+рассылками, другими admin).
+
+5.2 Функциональность роли Trainer (куратор)
+Кабинет тренера (/trainer)
+• Список учеников: все пользователи, купившие курс с tier = review_lite / review_pro /
+full_coaching
+• Прогресс ученика: какой день, % выполнения, последняя тренировка
+• Входящие видео: список видео от учеников с фильтром «не проверено / проверено»
+• Форма обратной связи: текстовый комментарий + поле для ссылки на видео-ответ
+• Уведомления: получает Telegram-пуш при загрузке нового видео
+• Создание/редактирование курсов: полный редактор курса (недели → дни →
+упражнения)
+
+5.3 Управление ролями
+• Роль назначается только в /admin → раздел «Пользователи» → кнопка «Изменить
+роль»
+• Новый пользователь всегда получает роль user при авторизации
+• Admin может назначить любую роль: user → trainer или user → admin
+• Добавление нового admin: /admin → «Администраторы» → «Добавить admin» (по
+Telegram ID или username)
+⚠️  Безопасность
+Изменение роли на admin/trainer доступно только пользователям с ролью admin. В коде
+middleware проверяет роль из JWT на каждом защищённом роуте.
+
+5.4 JWT Claims
+// Структура JWT payload
+{
+  "sub": "user-uuid",          // ID пользователя в нашей БД
+  "telegramId": 123456789,
+  "role": "user" | "trainer" | "admin",
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 14
+  "iat": 1234567890,
+  "exp": 1235167890            // +7 дней
+}
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 15
+6. СТРУКТУРА БАЗЫ ДАННЫХ
+6.1 Обзор таблиц
+Таблица Описание
+users Пользователи (все роли: user / trainer / admin)
+admin_invites Приглашения для добавления новых администраторов
+camps Кэмпы (спортивные лагеря)
+camp_days Программа дней кэмпа
+camp_day_options Доп. опции / доплаты за отдельные дни
+trainers Профили тренеров (отдельно от users — для публичного
+отображения)
+camp_trainers Связь кэмп ↔ тренер (M:M)
+bookings Записи пользователей на кэмп
+payments Платёжные транзакции (ЮKassa)
+payment_installments График рассрочки
+promo_codes Промокоды
+promo_code_usages История применения промокодов
+courses Онлайн-курсы
+course_weeks Недели курса
+course_days Тренировочные дни
+exercises Упражнения (библиотека)
+course_day_exercises Упражнения в тренировочном дне (порядок, подходы, повторы)
+user_courses Покупки курсов
+user_day_progress Прогресс по дням
+user_exercise_progress Прогресс по упражнениям
+test_results Результаты тестов (CMJ, прыжок и т.д.)
+video_reviews Видео-отчёты учеников + ответы тренеров
+notifications Уведомления пользователей
+notification_templates Шаблоны уведомлений
+merch_products Товары мерч-магазина (Фаза 2)
+merch_orders Заказы мерча (Фаза 2)
+offline_trainings Офлайн тренировки (Фаза 2)
+enso_levels Уровни Пути Энсо (Фаза 2)
+user_achievements Достижения
+audit_log Лог действий администраторов
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 16
+6.2 Таблица: users
+Поле Тип Nul
+l
+Default Описание
+id UUID PK NO gen_random_uui
+d()
+Первичный
+ключ
+telegram_id BIGINT NO — UNIQUE. ID
+пользовате
+ля в
+Telegram
+role ENUM('user','trainer','admin') NO 'user' Роль
+пользовате
+ля
+first_name VARCHAR(100) NO — Имя из
+Telegram
+last_name VARCHAR(100) YE
+S
+NULL Фамилия из
+Telegram
+username VARCHAR(100) YE
+S
+NULL Telegram
+@username
+photo_url TEXT YE
+S
+NULL Аватарка из
+Telegram
+phone VARCHAR(20) YE
+S
+NULL Телефон
+(обязателен
+для оплаты)
+email VARCHAR(255) YE
+S
+NULL Email
+(обязателен
+для оплаты,
+ОФД)
+play_level ENUM('beginner','amateur','advanced'
+,'pro')
+YE
+S
+NULL Уровень
+игры
+enso_level_id UUID FK YE
+S
+NULL Текущий
+уровень
+Пути Энсо
+enso_points INTEGER NO 0 Очки Энсо
+notifications_enabl
+ed
+BOOLEAN NO TRUE Push через
+Telegram
+is_blocked BOOLEAN NO FALSE Заблокиров
+ан ли
+created_at TIMESTAMPTZ NO NOW() Дата
+регистрации
+updated_at TIMESTAMPTZ NO NOW() Обновление
+last_active_at TIMESTAMPTZ YE
+S
+NULL Последняя
+активность
+Индексы: UNIQUE(telegram_id), INDEX(role), INDEX(username)
+
+6.3 Таблица: admin_invites
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 17
+Поле Тип Описание
+id UUID PK —
+invited_by_user_id UUID FK Кто пригласил (admin)
+telegram_id BIGINT Telegram ID приглашённого (или NULL если
+invite по ссылке)
+role ENUM('trainer','admin') Какую роль выдать при принятии
+token VARCHAR(64) Уникальный токен приглашения
+used BOOLEAN Использовано ли
+expires_at TIMESTAMPTZ Срок действия (24ч)
+created_at TIMESTAMPTZ —
+
+6.4 Таблица: camps
+Поле Тип Null Описание
+id UUID PK NO Первичный ключ
+slug VARCHAR(255) NO UNIQUE. URL slug (moscow-oct-2025)
+title VARCHAR(255) NO Название (Москва)
+description TEXT YES Полное описание
+level VARCHAR(50) NO Уровень: Shoshin / Shugyosha / Jukuren /
+Satori
+city VARCHAR(100) NO Город
+venue_name VARCHAR(255) YES Название площадки
+address TEXT YES Полный адрес
+lat DECIMAL(10,8) YES Широта для Yandex Maps
+lng DECIMAL(11,8) YES Долгота для Yandex Maps
+yandex_maps_url TEXT YES Прямая ссылка на Яндекс.Карты
+start_date DATE NO Дата начала
+end_date DATE NO Дата окончания
+duration_days INTEGER NO Кол-во дней
+base_price INTEGER NO Базовая цена в копейках (29 900 руб = 2 990
+000)
+deposit_amount INTEGER YES Размер депозита (предбронь)
+max_participants INTEGER NO Максимум участников
+current_participants INTEGER NO Текущее кол-во (включая pre_booked)
+status ENUM NO draft / published / full / completed / cancelled
+cover_image_url TEXT YES Главное фото
+gallery JSONB YES Доп. фото: ["url1", "url2"]
+assembly_time TIME YES Время сбора (09:30)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 18
+Поле Тип Null Описание
+start_time TIME YES Время начала (10:00)
+what_to_bring JSONB YES [{"item":"Вода"},{"item":"Форма"}]
+whats_included JSONB YES Что входит в стоимость
+hot_message VARCHAR(500) YES HOT-бейдж текст (Парковка платная)
+rating DECIMAL(3,2) YES Средний рейтинг (4.8)
+reviews_count INTEGER NO Кол-во отзывов
+organizer_phone VARCHAR(20) YES Телефон организатора
+organizer_telegram VARCHAR(100) YES Telegram организатора
+ics_file_url TEXT YES Ссылка на .ics файл в S3
+participants_chat_url TEXT YES Ссылка на чат участников
+memo_url TEXT YES Памятка участника (PDF в S3)
+created_at TIMESTAMPTZ NO —
+updated_at TIMESTAMPTZ NO —
+Индексы: UNIQUE(slug), INDEX(status), INDEX(start_date), INDEX(city)
+
+6.5 Таблица: bookings (Записи на кэмп)
+Поле Тип Null Описание
+id UUID PK NO —
+user_id UUID FK NO users.id
+camp_id UUID FK NO camps.id
+status ENUM NO pre_booked / deposit_paid / fully_paid /
+cancelled / refunded
+payment_type ENUM NO full / deposit / installment
+base_amount INTEGER NO Базовая стоимость (копейки)
+options_amount INTEGER NO Доп. опции (копейки)
+discount_amount INTEGER NO Скидка от промокода (копейки)
+total_amount INTEGER NO Итого к оплате (копейки)
+paid_amount INTEGER NO Уже оплачено
+remaining_amount INTEGER NO Остаток к доплате (если депозит/рассрочка)
+promo_code_id UUID FK YES Применённый промокод
+pre_booked_at TIMESTAMPTZ YES Время предбронирования
+pre_book_expires_at TIMESTAMPTZ YES Истечение предброни (+24ч)
+pdp_consent BOOLEAN NO Согласие на обработку ПДн
+waiver_consent BOOLEAN NO Вайвер принят
+photo_video_consent BOOLEAN YES Согласие на фото/видео
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 19
+Поле Тип Null Описание
+selected_day_ids JSONB YES ID выбранных опциональных дней
+notes TEXT YES Примечания пользователя
+receipt_url TEXT YES URL PDF квитанции в S3
+created_at TIMESTAMPTZ NO —
+updated_at TIMESTAMPTZ NO —
+
+6.6 Таблица: payments
+Поле Тип Null Описание
+id UUID PK NO —
+booking_id UUID FK YES Если оплата за кэмп
+user_course_id UUID FK YES Если покупка курса
+user_id UUID FK NO Плательщик
+yookassa_payment_id VARCHAR(255) YES ID в ЮKassa
+amount INTEGER NO Сумма (копейки)
+currency VARCHAR(3) NO RUB
+status ENUM NO pending / waiting_for_capture / succeeded /
+cancelled / refunded
+payment_method ENUM YES sbp / bank_card / yoo_money / installment
+description TEXT YES Описание для квитанции
+confirmation_url TEXT YES URL страницы оплаты ЮKassa
+metadata JSONB YES Данные от ЮKassa
+captured_at TIMESTAMPTZ YES Время подтверждения
+created_at TIMESTAMPTZ NO —
+
+6.7 Таблица: courses
+Поле Тип Описание
+id UUID PK —
+slug VARCHAR(255) UNIQUE. jump-pro-6weeks /
+speed-100-8weeks / upper-
+body-test
+title VARCHAR(255) Прыжок PRO — 6 недель
+category ENUM('jump','speed','upper_body','free') Категория для фильтра
+description TEXT Полное описание
+expected_result VARCHAR(255) +8-12 см к прыжку
+level ENUM('beginner','intermediate','advanced') Уровень сложности
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 20
+Поле Тип Описание
+duration_weeks INTEGER Кол-во недель (6 / 8 / 4)
+minutes_per_day VARCHAR(50) 30-45 мин/день
+price INTEGER Цена (копейки)
+installment_price INTEGER Цена рассрочки/месяц
+(копейки)
+cover_image_url TEXT Обложка (Timeweb S3)
+preview_video_url TEXT Vimeo ссылка для превью
+trainer_id UUID FK Автор курса
+requirements TEXT без болей в коленях
+suitable_for JSONB ["Повысить вертикальный
+прыжок"]
+not_suitable_for JSONB ["Серьёзные травмы"]
+refund_days INTEGER 7 — дней для возврата
+status ENUM('draft','published','archived') Статус
+rating DECIMAL(3,2) Средний рейтинг
+reviews_count INTEGER —
+is_featured BOOLEAN Показывать в топе
+sort_order INTEGER Порядок сортировки
+created_at TIMESTAMPTZ —
+
+6.8 Таблица: exercises (Библиотека упражнений)
+Поле Тип Описание
+id UUID PK —
+title VARCHAR(255) Прыжок на тумбу / CMJ / Приседы с
+паузой
+category ENUM('warmup','main','plyometric','cool
+down','test')
+Тип упражнения
+difficulty ENUM('easy','medium','hard') Сложность
+vimeo_video_id VARCHAR(100) ID видео в Vimeo (или полная
+ссылка)
+video_duration_se
+conds
+INTEGER Длительность видео
+thumbnail_url TEXT Превью кадр (из Vimeo API или S3)
+technique_steps JSONB [{"text":"Подсядьте..."},{"text":"Оттолк
+нитесь..."}]
+common_mistakes JSONB Типичные ошибки
+safety_notes JSONB Техника безопасности
+sets_default INTEGER Подходы по умолчанию (5)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 21
+Поле Тип Описание
+reps_default INTEGER Повторения (0 = задаётся время)
+duration_seconds INTEGER Время выполнения если не
+повторения
+rest_seconds INTEGER Отдых между подходами (45)
+created_at TIMESTAMPTZ —
+
+6.9 Таблица: video_reviews (Видео-отчёты учеников)
+Поле Тип Описание
+id UUID PK —
+user_id UUID FK Ученик
+trainer_id UUID FK Куратор (назначается автоматически по
+курсу)
+user_course_id UUID FK Покупка курса
+course_day_id UUID FK День курса
+video_url TEXT Ссылка на видео (загружено в S3 или
+ссылка на Telegram)
+user_comment TEXT Комментарий ученика
+rpe INTEGER Субъективная нагрузка (1-10)
+status ENUM('pending','reviewed') Проверено ли тренером
+trainer_feedback TEXT Текстовый отзыв тренера
+trainer_video_url TEXT Ссылка на видео-ответ тренера
+reviewed_at TIMESTAMPTZ Дата проверки
+created_at TIMESTAMPTZ —
+
+6.10 Таблица: promo_codes
+Поле Тип Описание
+id UUID PK —
+code VARCHAR(50) UNIQUE. POWERJUMP10
+discount_type ENUM('percentage','fixed_amount') Тип скидки
+discount_value INTEGER 10 = 10% или 200000 = 2000 руб.
+max_uses INTEGER NULL = безлимит
+used_count INTEGER Сколько раз применён
+valid_from TIMESTAMPTZ Начало действия
+valid_until TIMESTAMPTZ Конец действия
+applicable_to ENUM('all','camps','courses','merch') Область применения
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 22
+Поле Тип Описание
+specific_item_id UUID Конкретный кэмп или курс (если
+не all)
+is_active BOOLEAN Активен ли
+created_by_admin_id UUID FK Кто создал
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 23
+7. REST API — ПОЛНАЯ ДОКУМЕНТАЦИЯ
+7.1 Общие правила
+• Base URL: /api
+• Формат: JSON (Content-Type: application/json)
+• Аутентификация: Authorization: Bearer <jwt> для защищённых роутов
+• Ошибки: { "error": "Описание", "code": "ERROR_CODE", "field": "phone" }
+• Деньги: целые числа в копейках. 29 900 руб = 2990000
+• Пагинация: ?page=1&limit=20
+• Даты: ISO 8601 (2025-10-12T09:30:00Z)
+
+7.2 Авторизация
+Метод Роут Auth Описание
+POST /api/auth/telegram — Авторизация через Telegram initData →
+возвращает JWT
+POST /api/auth/refresh JWT Обновить JWT (если не истёк)
+DELETE /api/auth/logout JWT Выход
+
+7.3 Кэмпы
+Мето
+д
+Роут Aut
+h
+Описание
+GET /api/camps — Каталог.
+Фильтры: ?status=published&city=Москва&sort=date_asc&
+page=1
+GET /api/camps/:id — Детальная информация о кэмпе
+GET /api/camps/:id/availabili
+ty
+— Кол-во свободных мест
+POST /api/camps/:id/pre-book JW
+T
+Предбронирование (резервирует место на 24ч)
+POST /api/camps/:id/book JW
+T
+Оформление записи + создание платежа ЮKassa
+POST /api/camps/promo/valid
+ate
+JW
+T
+Проверить промокод: { code, campId }
+GET /api/camps/:id/ics JW
+T
+Скачать .ics файл для календаря
+GET /api/camps/:id/memo JW
+T
+Скачать PDF памятку участника
+
+Пример тела POST /api/camps/:id/book:
+{
+  "paymentType": "full" | "deposit" | "installment",
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 24
+  "promoCodeId": "uuid | null",
+  "selectedDayIds": ["uuid1", "uuid2"],   // опциональные дни
+  "pdpConsent": true,                      // ОБЯЗАТЕЛЬНО
+  "waiverConsent": true,                   // ОБЯЗАТЕЛЬНО
+  "photoVideoConsent": false,              // необязательно
+  "notes": "Аллергия на пыль"              // необязательно
+}
+Ответ: { "bookingId": "uuid", "paymentUrl": "https://yookassa.ru/...", "totalAmount": 3480000 }
+
+7.4 Курсы
+Мето
+д
+Роут Aut
+h
+Описание
+GET /api/courses — Каталог.
+Фильтр: ?category=jump&status=publishe
+d
+GET /api/courses/:id — Детальная страница курса
+GET /api/courses/:id/preview JWT Пробный доступ к Дню 1
+POST /api/courses/:id/purchase JWT Купить курс + создать платёж
+GET /api/user/courses JWT Мои курсы
+GET /api/user/courses/:id/progress JWT Прогресс по курсу
+GET /api/user/courses/:id/day/:num JWT Получить тренировочный день
+POST /api/user/courses/:id/day/:num/complet
+e
+JWT Завершить день: { rpe: 8 }
+POST /api/user/courses/:id/day/:num/video JWT Отправить видео тренеру
+POST /api/exercises/:id/viewed JWT Отметить упражнение просмотренным
+POST /api/test-results JWT Сохранить результат теста (CMJ)
+
+7.5 Личный кабинет пользователя
+Метод Роут Auth Описание
+GET /api/user/profile JWT Профиль текущего пользователя
+PATCH /api/user/profile JWT Обновить: { phone, email, playLevel }
+GET /api/user/bookings JWT Мои записи на кэмпы
+GET /api/user/payments JWT История платежей
+GET /api/user/payments/:id/receipt JWT Скачать PDF квитанцию
+GET /api/user/notifications JWT Уведомления. ?unread=true
+PATCH /api/user/notifications/:id/read JWT Прочитать уведомление
+PATCH /api/user/notifications/read-all JWT Прочитать все
+GET /api/user/achievements JWT Достижения и бейджи
+DELETE /api/user/account JWT Удалить/анонимизировать аккаунт (152-ФЗ)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 25
+
+7.6 Кабинет тренера
+Метод Роут Auth Описание
+GET /api/trainer/students Trainer Мои ученики с прогрессом
+GET /api/trainer/video-reviews Trainer Входящие видео. ?status=pending
+PATCH /api/trainer/video-reviews/:id Trainer Добавить отзыв: { feedback, videoUrl }
+GET /api/trainer/courses Trainer Курсы, которые я веду/создал
+
+7.7 Платёжная система
+Метод Роут Auth Описание
+POST /api/payments/create JWT Создать платёж ЮKassa
+GET /api/payments/:id/status JWT Статус платежа
+POST /api/payments/webhook IP WL Вебхук от ЮKassa (IP whitelist)
+POST /api/payments/:id/refund Admin Возврат
+
+7.8 API администратора
+Метод Роут Описание
+POST /api/admin/auth/login Вход в админку (email + пароль)
+GET /api/admin/dashboard Статистика: выручка, пользователи, записи
+GET /
+POST
+/api/admin/camps Список кэмпов / создание
+GET /
+PATCH /
+DELETE
+/api/admin/camps/:id Кэмп: чтение / обновление / удаление
+GET /api/admin/camps/:id/bookings Записи на кэмп
+PATCH /api/admin/bookings/:id Изменить статус записи вручную
+GET /
+POST
+/api/admin/courses Курсы: список / создание
+GET /
+PATCH /
+DELETE
+/api/admin/courses/:id Курс: чтение / обновление / удаление
+GET /
+POST
+/api/admin/exercises Библиотека упражнений
+GET /
+POST
+/api/admin/trainers Тренеры: список / создание профиля
+GET /api/admin/users Пользователи.
+Фильтры: ?role=trainer&search=Иван
+GET /api/admin/users/:id Профиль пользователя (история, платежи)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 26
+Метод Роут Описание
+PATCH /api/admin/users/:id/role Изменить роль: { role: "trainer" }
+PATCH /api/admin/users/:id/block Заблокировать/разблокировать
+GET /api/admin/payments Все платежи с фильтрами
+GET /
+POST
+/api/admin/promo-codes Промокоды
+PATCH /api/admin/promo-
+codes/:id/toggle
+Активировать/деактивировать
+POST /api/admin/notifications/send Массовая/личная рассылка
+GET /api/admin/notifications/history История рассылок
+GET /
+POST
+/api/admin/admins Список и добавление администраторов
+DELETE /api/admin/admins/:id Удалить права администратора
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 27
+8. ЭКРАНЫ И СТРАНИЦЫ ПРИЛОЖЕНИЯ
+8.1 Навигация
+Mini App использует стековую навигацию без постоянного bottom bar. Назад — нативная
+кнопка Telegram. Между главными разделами — через плитки главного экрана. Все
+переходы — Next.js router.push().
+Дизайн: тёмная тема (#0A0A0A фон, #E63946 акцент, #2DC653 успех). Все компоненты из
+shadcn/ui с кастомными CSS переменными под Telegram.
+
+8.2 Экран: Главная (/)
+Элемент Описание Данные
+Шапка Логотип + слоган «ты решаешь как
+играть и жить»
+Статика
+Баннер
+сообщества
+Иконка + «Сообщество: 12 540
+участников» + HOT-акция
+Из БД (settings)
+Сетка 3×3 9 плиток: Манифест, Кэмпы, Путь
+Энсо, Атлетизм, Консультации,
+Офлайн, Новости (бейдж), Мерч
+(NEW), Профиль
+Бейджи из /api/user/notifications
+Баннер кэмпа Ближайший кэмп: город, даты,
+прогресс-бар, кнопка
+«Предбронь»
+GET
+/api/camps?limit=1&sort=date_asc
+
+8.3 Экран: Каталог кэмпов (/camps)
+Элемент Описание
+Заголовок «Кэмпы» + кнопки поиска и фильтра
+Горизонтальный
+скролл фильтров
+Все / Ближайшие / Мой уровень / Город / Даты
+Карточка кэмпа Город, цена, иконки уровней (Shugyosha·Jukuren), прогресс-бар,
+«Осталось X мест», рейтинг ★ 4.8 (125), кнопки «Предбронь» и
+«Подробнее»
+Пустое состояние Нет кэмпов по фильтру — иллюстрация + «Скоро новые кэмпы»
+Бесконечная
+пагинация
+Подгрузка при скролле вниз (limit=10, page++)
+
+8.4 Экран: Детальная страница кэмпа (/camps/[id])
+Компоненты (сверху вниз):
+• Фото-карусель (swipe gallery, загружается из camp.gallery)
+• Мета-строка: уровень · длительность · цена
+• CTA-кнопки sticky: «ПРЕДБРОНЬ» (красная) | «ОПЛАТИТЬ» (outlined)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 28
+• Подпись: «Бронь на 24ч»
+• Прогресс заполненности: «Заполнено 72% — осталось 7 мест» (прогресс-бар
+красный)
+• Доплата за отель — если указана
+• Аккордеон «ПРОГРАММА ПО ДНЯМ»: список дней, цены доп. опций, чекбоксы
+• Аккордеон «ТРЕНЕРЫ»: фото + имя + специализация
+• Аккордеон «ЧТО ВХОДИТ»
+• Аккордеон «ЧТО ВЗЯТЬ С СОБОЙ»
+• Аккордеон «АДРЕС И КАРТА» → ссылка на /camps/[id]/location
+• Sticky footer: цена + «ПРЕДБРОНЬ»
+Логика предбронирования:
+38. POST /api/camps/:id/pre-book → статус pre_booked, pre_book_expires_at = NOW()+24h
+39. current_participants++ (место временно занято)
+40. Крон каждые 15 мин отменяет истёкшие предброни, возвращает место
+41. Telegram-уведомление: «Место забронировано на 24 часа! Оплатите до [время]»
+
+8.5 Экран: Карта кэмпа (/camps/[id]/location)
+Элемент Описание
+Заголовок «Кэмп [Город] · [даты]»
+Время в пути 3 варианта с иконками (машина / метро / пешком) — Yandex Maps
+API
+Карта Yandex Maps embed, маркер на площадке, кластеризация если
+несколько
+Адрес Текст + кнопка «Копировать» + кнопка «Открыть в Яндекс.Картах»
+Фото площадки Thumbnail из gallery
+Что взять Список с чекбоксами (состояние в localStorage)
+Расписание Сбор: 09:30, Начало: 10:00
+Контакт Телефон + ссылка на Telegram организатора
+Кнопки «Добавить в календарь .ics» | «Чат участников» | «Памятка PDF»
+HOT сообщение Если camp.hot_message заполнено — красный баннер внизу
+
+8.6 Экран: Оплата кэмпа (/camps/[id]/checkout)
+Элемент Описание
+Шапка Город + цена + даты + уровень
+Переключатель «Полная» | «Депозит» | «Частями (рассрочка)»
+Поле промокода Ввод кода + кнопка «Применить» → POST
+/api/camps/promo/validate
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 29
+Элемент Описание
+Согласия ☑ ПДн согласие (ссылка на текст), ☑ Вайвер, ☐ Фото/видео
+(необяз.)
+Иконки оплаты Telegram Pay / Visa · MasterCard / СБП
+Сводка Базовая стоимость / Доп. опции / Скидка (-2000₽) / Итого
+Кнопка «ОПЛАТИТЬ» (зелёная, disabled пока не приняты обязательные
+согласия)
+Дисклеймер «Деньги спишутся только после подтверждения. Безопасный
+платёж.»
+⚠️  Проверка профиля перед оплатой
+Если phone или email не заполнены — показываем модальное окно «Заполните профиль»
+перед переходом к оплате. Без этих данных ЮKassa не может выдать чек по 54-ФЗ.
+
+8.7 Экран: Каталог курсов (/courses)
+Элемент Описание
+Табы «Прыжок» | «Скорость» | «Верх тела» | «Бесплатные» — фильтр по
+category
+Сетка 2 колонки Карточка: обложка, категориальный бейдж, NEW/W3 бейджи, название,
+результат (+8-12 см зелёным), уровень, время, кнопки «Пробный день»
+/ «Купить»
+Купленный курс Кнопка «Продолжить» с прогресс-баром вместо «Купить»
+Пустое состояние Если нет курсов в категории
+
+8.8 Экран: Детальная страница курса (/courses/[id])
+• Название + прогноз прироста (+8-12 см)
+• Требования (без болей в коленях)
+• Предпросмотр Дня 1: список упражнений + thumbnail
+• CTA: «Пробный день» (красная) | «Купить» (зелёная)
+• Цена + рассрочка + «7 дней — возврат»
+• Рейтинг ★★★★½ (352 отзыва)
+• «Кому подойдёт» / «Кому не подойдёт» (2 колонки)
+• Карточка тренера (фото + биография + ссылка)
+• Аккордеон «Что внутри»: список недель
+• Уровни коучинга: Review Lite (1500₽) | Review Pro (3000₽) | Full Coaching (5000₽)
+
+8.9 Экран: Тренировочный день (/courses/[id]/day/[num])
+Экран показывает структурированную тренировку. Каждая секция (разминка, основной
+блок, плиометрика, заминка) содержит список упражнений.
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 30
+Элемент Описание
+Заголовок «[Название курса]» + «Неделя X · День Y» (прогресс)
+Секции РАЗМИНКА / ОСНОВНОЙ БЛОК / ПЛИОМЕТРИКА / ЗАМИНКА —
+каждая с зелёной галочкой при выполнении
+Строка упражнения Иконка-тип (⊙ таймер / × повторения), название, кол-во (3×6),
+кнопка ▶ видео, чекбокс выполнения
+«Добавить замену» Кнопка-ссылка под каждым упражнением для альтернативы
+Footer-панель Кнопка «СТАРТ» (запускает таймер) | «Завершить день»
+RPE шкала 1–10 в нижней части, выбирается перед «Завершить день»
+«Отметить выполнено» Зелёная кнопка — отмечает день completed
+«Отправить видео
+тренеру»
+Только если куплен Review Pro или Full Coaching — открывает
+форму
+Таймер Активируется кнопкой СТАРТ, секундомер вверху
+
+8.10 Экран: Видео упражнения (/exercises/[id])
+Открывается как fullscreen modal поверх тренировочного дня.
+Элемент Описание
+Видеоплеер Vimeo iframe embed. Только авторизованным пользователям с
+доступом к курсу.
+Тайм-бар Прогресс + текущее время + общая длительность
+Мета Название (Прыжок на тумбу) + формат (5×6) + сложность
+Вкладки «Техника» | «Ошибки» | «Безопасность» — содержимое из
+JSONB полей
+Кнопки «Смотреть в полноэкранном» (красная) | «Отметить
+просмотрено» (зелёная)
+Хлебная крошка «День 12 · Основной комплекс»
+ℹ️  Защита Vimeo
+Видео курсов хранятся с настройкой Vimeo «приватный, embed только с разрешённых
+доменов» (volleydzen.ru). Пользователь не может скопировать прямую ссылку на видео.
+Доступ к iframe-URL проверяется через наш API (user_courses.status = active).
+
+8.11 Экран: Личный кабинет (/profile)
+Блок Содержимое
+Шапка профиля Аватар (из Telegram) + имя + уровень Энсо + «Редактировать»
+МОИ КЭМПЫ Список купленных кэмпов: город, даты, статус (Оплачен /
+Активен / Завершён)
+ПУТЬ ЭНСО Название уровня + круговой прогресс-бар (67%) + кнопка
+«Продолжить»
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 31
+Блок Содержимое
+КУРСЫ Активный курс + «Последний урок» + % прогресса + кнопки
+«Продолжить» / «Обновить тест»
+ТРЕНИРОВКИ Ближайшая групповая тренировка (Фаза 2)
+ОПЛАТЫ И
+ДОКУМЕНТЫ
+Список платежей + «Квитанция.PDF» + «В календарь.ics»
+УВЕДОМЛЕНИЯ Переключатель включить/выключить пуши
+ДОСТИЖЕНИЯ Сетка бейджей: «Кэмпы 3» / «Прыжок 1» / «Скорость 0»
+
+8.12 Экран: Кабинет тренера (/trainer)
+Доступен только пользователям с ролью trainer. Ссылка появляется в профиле и/или
+через глубокую ссылку.
+• МОИ УЧЕНИКИ: список всех учеников с прогрессом (N% курса, последняя
+тренировка X дней назад)
+• ВХОДЯЩИЕ ВИДЕО: очередь непроверенных видео-отчётов с отметкой «Новое»
+• При открытии видео: плеер + комментарий ученика + форма для текстового/видео
+ответа
+• МОИ КУРСЫ: редактор курсов — создание/редактирование через те же формы что в
+/admin
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 32
+9. ПЛАТЁЖНАЯ СИСТЕМА ЮKASSA
+9.1 Типы оплаты
+Тип Описание Реализация ЮKassa
+Полная оплата Вся сумма сразу Обычный платёж, payment_method = sbp /
+bank_card
+Депозит
+(предбронь)
+Частичная оплата.
+Остаток — до начала
+кэмпа
+Два платежа: 1й на deposit_amount, 2й на
+remaining_amount
+Рассрочка
+«Сплит»
+ЮKassa Сплит —
+пользователь платит
+частями, мы получаем
+полную сумму сразу
+payment_method_type: installments в
+запросе к API
+⚠️  Требование для ЮKassa
+Необходимы: зарегистрированное ИП или ООО, подключение к ЮKassa (проверка 3-5
+рабочих дней), онлайн-касса для 54-ФЗ (или подключение через ЮKassa с их кассой). Без
+этого платёжный модуль не запустится.
+
+9.2 Схема платёжного процесса
+42. Пользователь нажимает «ОПЛАТИТЬ» → Frontend → POST /api/payments/create
+43. Backend формирует запрос к ЮKassa API (POST https://api.yookassa.ru/v3/payments)
+44. ЮKassa возвращает { id, status: "pending", confirmation: { url } }
+45. Backend сохраняет payment в БД (status = pending), возвращает confirmation.url
+46. Frontend открывает confirmation.url через Telegram.WebApp.openLink()
+47. Пользователь оплачивает на странице ЮKassa
+48. ЮKassa отправляет HTTP POST на /api/payments/webhook
+49. Backend: проверяет IP из белого списка ЮKassa, парсит event = "payment.succeeded"
+50. Транзакционно обновляет: payment.status = succeeded, booking.status = fully_paid
+51. Генерирует PDF квитанцию → загружает в Timeweb S3
+52. Отправляет Telegram-уведомление пользователю с ссылкой на квитанцию
+
+9.3 Запрос создания платежа (пример кода)
+// lib/yookassa.ts
+export async function createPayment(params: {
+  amount: number;        // копейки
+  description: string;
+  metadata: Record<string, string>;
+  returnUrl: string;
+  paymentType: "full" | "deposit" | "installment";
+}) {
+  const body: any = {
+    amount: { value: (params.amount / 100).toFixed(2), currency: "RUB" },
+    confirmation: { type: "redirect", return_url: params.returnUrl },
+    description: params.description,
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 33
+    metadata: params.metadata,
+    capture: true,
+  };
+
+  if (params.paymentType === "installment") {
+    body.payment_method_data = { type: "installments" };
+  }
+
+  const response = await fetch("https://api.yookassa.ru/v3/payments", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotence-Key": crypto.randomUUID(),
+      "Authorization": "Basic " + Buffer.from(
+        `${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`
+      ).toString("base64"),
+    },
+    body: JSON.stringify(body),
+  });
+  return response.json();
+}
+
+9.4 Обработка вебхука
+// app/api/payments/webhook/route.ts
+export async function POST(request: Request) {
+  // 1. Проверка IP адреса ЮKassa
+  const ip = request.headers.get("x-real-ip") || "";
+  if (!isYookassaIP(ip)) {
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { event, object } = await request.json();
+
+  if (event === "payment.succeeded") {
+    const { id: yookassaId, metadata, amount } = object;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { yookassaPaymentId: yookassaId },
+        data: { status: "succeeded", capturedAt: new Date() },
+      });
+      if (metadata.booking_id) {
+        await tx.booking.update({
+          where: { id: metadata.booking_id },
+          data: { status: "fully_paid", paidAmount: Math.round(+amount.value *
+100) },
+        });
+      }
+    });
+
+    // Асинхронно: PDF + уведомление
+    generateReceiptAndNotify(metadata.booking_id, metadata.user_id);
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 34
+  }
+
+  return Response.json({ ok: true });
+}
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 35
+10. ВИДЕОКОНТЕНТ: VIMEO EMBED + ЗАЩИТА
+ДОСТУПА
+10.1 Стратегия
+Видео курсов хранятся на Vimeo (или аналогичном хостинге) и встраиваются в
+приложение через iframe. Это решение принято как быстрое и дешёвое для Фазы 1. При
+росте нагрузки можно перейти на Kinescope (российский аналог, защита по домену,
+аналитика).
+Платформа Цена/мес Плюсы Минусы Решение
+Vimeo Pro ~$20 Готов, CDN, embed
+без рекламы
+Ограничения в РФ
+(VPN ломает)
+✅ Фаза 1
+Kinescope.io ~2000₽ РФ, нет блокировок,
+токены, аналитика
+Нужно тестировать 🔄
+Рассмотреть
+для Фазы 2
+VK Video Бесплатно РФ, не блокируется Нет embed API,
+реклама
+❌ Не
+подходит
+
+10.2 Защита видео курсов от нелегального просмотра
+Видео нельзя смотреть без покупки курса. Схема защиты:
+53. В Vimeo: настройка «Embed only on: volleydzen.ru» → iframe не работает с других
+доменов
+54. В нашем API: перед отдачей Vimeo Video ID проверяется user_courses.status = active
+55. Frontend получает Video ID только через авторизованный эндпоинт GET
+/api/user/courses/:id/day/:num
+56. Пробный день (preview): Video ID открытых дней доступен без авторизации
+57. Купленный курс: Video ID закрытых дней только авторизованным с активной
+покупкой
+
+10.3 Компонент VimeoPlayer
+// components/tma/VimeoPlayer.tsx
+interface VimeoPlayerProps {
+  videoId: string;        // Vimeo video ID
+  onProgress?: (pct: number) => void;
+  onEnded?: () => void;
+}
+
+export function VimeoPlayer({ videoId, onProgress, onEnded }: VimeoPlayerProps) {
+  // Используем Vimeo Player SDK для отслеживания прогресса
+  // При просмотре > 80% → автоматически вызвать onEnded
+  const src =
+`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=.
+..`;
+  return (
+    <iframe src={src} allow="autoplay; fullscreen; picture-in-picture"
+      style={{ width: "100%", aspectRatio: "16/9", border: "none" }} />
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 36
+  );
+}
+
+10.4 Загрузка изображений и PDF
+Тип файла Хранилище Формат Макс. размер
+Фото кэмпов Timeweb S3 WebP (конвертация при
+загрузке через sharp)
+2 MB
+Аватарки тренеров Timeweb S3 WebP 500 KB
+Обложки курсов Timeweb S3 WebP 1 MB
+PDF квитанции Timeweb S3 PDF (генерация @react-
+pdf/renderer)
+500 KB
+PDF памятки Timeweb S3 PDF (загрузка вручную
+из админки)
+10 MB
+Видео учеников
+(отчёты)
+Timeweb S3 MP4 (до 100 MB) 100 MB
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 37
+11. PUSH-УВЕДОМЛЕНИЯ ЧЕРЕЗ TELEGRAM BOT
+API
+11.1 Архитектура
+В Telegram Mini App нет стандартных Web Push. Все уведомления отправляются через
+Telegram Bot API — метод sendMessage с chat_id = telegram_id пользователя. Это нативно
+и работает лучше любого Push.
+ℹ️  Условие работы уведомлений
+Пользователь должен запустить бота командой /start хотя бы один раз. При первом
+открытии Mini App бот автоматически отправляет приветственное сообщение — это и даёт
+разрешение на отправку дальнейших сообщений.
+
+11.2 Типы уведомлений
+Тип Триггер Пример текста
+Предбронь
+подтверждена
+POST pre-book
+успешен
+✅ Место в кэмпе Москва (12-14 окт)
+забронировано на 24 часа! Оплатите до
+[время] чтобы подтвердить участие.
+Напоминание об
+оплате
+Крон: за 6ч до
+истечения
+⏰ До конца брони осталось 6 часов. Не
+упустите место в кэмпе Москва!
+Оплата
+подтверждена
+Webhook
+payment.succeeded
+🎉 Оплата 34 800₽ прошла! Вы участник
+кэмпа Москва 12-14 окт. Квитанция: [ссылка]
+Кэмп через 3 дня Крон: 08:00 за 3 дня 🏐 До кэмпа Москва 3 дня! Не забудьте:
+форму, кроссовки, воду, полотенце.
+Кэмп завтра Крон: 08:00 за 1
+день
+📍 Кэмп завтра! Сбор в 09:30 на ул. Лётчика
+Бабушкина, 23. Чат участников: [ссылка]
+Напоминание о
+курсе
+Крон: 09:00
+ежедневно
+💪 Привет! Твоя тренировка День 14 «Прыжок
+PRO» ждёт. Не прерывай прогресс!
+Новый ответ
+тренера
+После trainer_review 📝 Тренер Алексей проверил твоё видео за
+День 14 и оставил комментарий!
+Освободилось
+место
+Авто при отмене
+брони
+🟢 Освободилось место на кэмп СПб (15-17
+ноя)! Успей занять!
+Промо рассылка Ручная отправка из
+/admin
+🔥 Только 48 часов! Скидка -10% на Прыжок
+PRO. Промокод: JUMP10
+
+11.3 Реализация отправки
+// lib/telegram.ts
+export async function sendTelegramMessage(
+  telegramId: number,
+  text: string,
+  buttons?: Array<{ text: string; url?: string; callback_data?: string }>
+) {
+  const payload: any = {
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 38
+    chat_id: telegramId,
+    text,
+    parse_mode: "HTML",
+  };
+
+  if (buttons?.length) {
+    payload.reply_markup = {
+      inline_keyboard: [buttons.map(b => ({
+        text: b.text,
+        ...(b.url ? { url: b.url } : { callback_data: b.callback_data }),
+      }))],
+    };
+  }
+
+  await fetch(
+    `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body:
+JSON.stringify(payload) }
+  );
+}
+
+11.4 Крон-задачи
+Задача Расписание Описание
+Истечение предброни Каждые 15 минут SELECT bookings WHERE status=pre_booked
+AND expires_at < NOW() → отменить,
+освободить место, уведомить
+Напоминание об
+оплате
+Каждый час Брони с expires_at BETWEEN NOW()+5h AND
+NOW()+7h → отправить напоминание
+Напоминание кэмп -3д 08:00 ежедневно bookings.camp.start_date = TODAY+3 AND
+status=fully_paid → уведомление
+Напоминание кэмп -1д 08:00 ежедневно bookings.camp.start_date = TODAY+1 → адрес
++ чат
+Напоминание о курсе 09:00 ежедневно user_courses: последний прогресс > 1 дня
+назад → напоминание
+Реализация крона: node-cron (на Timeweb VPS) или Vercel Cron Jobs если переход на
+Vercel.
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 39
+12. АДМИНИСТРАТИВНАЯ ПАНЕЛЬ (/ADMIN)
+12.1 Доступ и авторизация
+Панель доступна по адресу volleydzen.ru/admin. Авторизация — email + пароль (не через
+Telegram). В коде: middleware.ts проверяет JWT admin-токен на каждом /admin роуте.
+Добавление нового администратора: раздел /admin/admins → кнопка «Добавить admin» →
+форма (Telegram ID или @username + роль admin/trainer) → система находит
+пользователя в БД и обновляет role.
+✅  Гибкость ролей
+Admin может назначать роль trainer для новых кураторов курсов без необходимости давать
+полный доступ к /admin. Trainer видит только свой кабинет (/trainer), admin — весь /admin.
+
+12.2 Dashboard (/admin)
+Блок Метрика / Содержимое
+Выручка Сегодня / 7 дней / 30 дней / всего (в рублях). Линейный график.
+Пользователи Новых сегодня / за 7 дней / всего. График роста.
+Кэмпы Ближайший кэмп: название, дата, X/Y мест (прогресс-бар), выручка
+по нему
+Активные записи pre_booked / deposit_paid / fully_paid / cancelled (4 карточки с
+числами)
+Топ курсов Таблица: название, продаж, выручка
+Последние транзакции Таблица: дата, пользователь, сумма, тип, статус (последние 10)
+Непроверенные видео Счётчик video_reviews WHERE status=pending → ссылка на очередь
+
+12.3 Управление кэмпами (/admin/camps)
+Список кэмпов:
+• Таблица: название, город, даты, статус (бейдж), X/Y мест, выручка, кнопки
+«Редактировать» / «Записи»
+• Фильтры: статус, город, год
+• Кнопка «Создать кэмп» → форма
+Форма кэмпа (все поля):
+• Основное: название, город, адрес, lat/lng (карта на вводе), даты, длительность
+• Уровень: Shoshin / Shugyosha / Jukuren / Satori (multiple select)
+• Цены: базовая цена, депозит, максимум участников
+• Программа: добавить/удалить/переставить дни (drag-and-drop). Каждый день:
+название, описание, доп. цена, обязателен/опционален
+• Тренеры: multiple select из trainers
+• Медиа: drag-and-drop загрузка фото (→ S3), выбор главного
+• Информация: что входит, что взять, время сбора, время начала
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 40
+• Контакты: телефон организатора, Telegram
+• HOT сообщение: текстовое поле
+• Файлы: upload .ics и PDF памятки (→ S3)
+• Ссылки: чат участников, Яндекс.Карты
+• Статус: переключатель draft / published / cancelled
+Список записей на кэмп (/admin/camps/[id]/bookings):
+• Таблица: имя участника, telegram, телефон, email, статус оплаты, сумма, дата,
+действия
+• Экспорт в Excel (для печати списков)
+• Ручное изменение статуса брони (например подтвердить оплату наличными)
+• Кнопка «Написать участнику» → открывает sendMessage в Bot API
+
+12.4 Управление курсами (/admin/courses)
+Редактор курса:
+• Метаданные: всё из таблицы courses + загрузка обложки
+• Структура (дерево): Курс → Недели → Дни → Упражнения
+• Drag-and-drop для переупорядочивания
+• Для каждого упражнения в дне: поиск в библиотеке или «Добавить новое»
+• Настройки упражнения в этом дне: подходы, повторения, отдых, секция (разминка и
+т.д.)
+• Настройки пробного доступа: отметить недели/дни как free_preview
+
+12.5 Библиотека упражнений (/admin/exercises)
+• Поиск по названию и категории
+• Карточка упражнения: Vimeo ссылка, шаги техники, ошибки, безопасность
+• «В скольких курсах используется» — статистика
+• Форма создания/редактирования — все поля из таблицы exercises
+
+12.6 Пользователи (/admin/users)
+• Таблица: имя, @username, дата регистрации, роль, телефон, email, кэмпы, курсы,
+сумма трат
+• Поиск: по имени, username, telegram_id, телефону, email
+• Фильтры: роль, дата регистрации, наличие кэмпов/курсов
+• Профиль пользователя: полная история + кнопки «Изменить роль» /
+«Заблокировать» / «Написать»
+
+12.7 Рассылки (/admin/notifications)
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 41
+• Целевая аудитория: все / у кого кэмп через N дней / купившие курс X / сегмент по
+уровню
+• Текст с HTML-тегами Telegram (<b>, <i>, <a href="...">)
+• Опциональная кнопка: текст + URL
+• Предпросмотр сообщения (рендер Telegram-разметки)
+• Отложенная отправка: date/time picker
+• История: таблица с датой, аудиторией, охватом, статусом
+
+12.8 Промокоды (/admin/promo-codes)
+• Таблица: код, скидка, использовано / лимит, срок, область, статус
+• Форма: код (ввод или генератор), тип (%), размер, лимит, срок, область
+• Toggle активации одним кликом
+
+12.9 Управление администраторами (/admin/admins)
+• Таблица: имя, @username, роль (admin/trainer), дата добавления, кто добавил
+• «Добавить admin/trainer»: ввести Telegram ID или @username → выбрать роль →
+система обновляет users.role
+• Удалить права: кнопка «Снять права» → users.role = user
+⚠️  Важно
+Нельзя снять права с себя. Нельзя снять права с последнего admin (должен остаться хотя
+бы 1). Проверяется на backend.
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 42
+13. БЕЗОПАСНОСТЬ И 152-ФЗ
+13.1 152-ФЗ (Персональные данные)
+Поскольку собираются ФИО, телефон и email граждан РФ — приложение является
+оператором персональных данных. Требования:
+58. Данные хранятся только на серверах в РФ → Timeweb Cloud, Россия
+59. Сбор только минимально необходимых данных (принцип минимизации)
+60. Пользователь принимает согласие на обработку ПДн при первой оплате (чекбокс с
+ссылкой на документ)
+61. Реализован DELETE /api/user/account — удаление или анонимизация всех ПДн по
+запросу
+62. Логи не должны содержать ПДн в открытом виде
+63. Уведомление Роскомнадзора об операторе ПДн (юридическая задача заказчика)
+
+13.2 Безопасность API
+Угроза Защита
+Поддельный Telegram
+initData
+HMAC-SHA256 верификация на сервере, проверка auth_date
+< 1ч
+JWT компрометация Короткий TTL (7 дней), алгоритм HS256, хранение в памяти
+(не localStorage)
+SQL Injection Prisma ORM — параметризованные запросы, нет raw SQL
+XSS Next.js экранирует JSX, DOMPurify для пользовательского
+HTML контента
+CSRF JWT в заголовке (не в cookie), SameSite cookies для /admin
+Rate Limiting Redis: 60 req/min на IP, 10 req/min на /api/auth/telegram
+Webhook спуфинг ЮKassa: IP whitelist (185.71.76.0/27, 185.71.77.0/27)
+Несанкционированный
+доступ к видео
+Проверка user_courses.status перед отдачей Vimeo ID
+Brute force /admin Rate limit на /api/admin/auth, lockout после 5 попыток
+IDOR (доступ к чужим
+данным)
+Каждый запрос проверяет user_id из JWT, не из параметров
+
+13.3 Пароли и секреты
+• Пароли администраторов: bcrypt, cost factor 12
+• Все секреты (ключи API, JWT secret) — только в .env, не в коде
+• GitHub: .env в .gitignore, Secrets для CI/CD
+• Никаких секретов в логах и трейсах Sentry
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 43
+14. ДЕПЛОЙ НА TIMEWEB CLOUD
+14.1 Инфраструктура
+Сервис Timeweb Cloud продукт Конфигурация
+Next.js приложение Cloud Apps (Node.js) 2 vCPU, 2GB RAM — достаточно для
+500 пользователей
+PostgreSQL Cloud Databases
+(PostgreSQL)
+Managed: бэкапы ежедневно,
+автофейловер
+Redis Cloud Databases (Redis) Для rate limiting и кэша
+Файловое хранилище S3 Object Storage Изображения, PDF, видео учеников
+Домен + SSL DNS + Let's Encrypt volleydzen.ru, HTTPS принудительный
+
+14.2 Настройка Telegram Bot
+64. Создать бота через @BotFather → /newbot → сохранить токен
+65. /setmenubutton → выбрать «Launch Mini App» → указать https://volleydzen.ru
+66. /setcommands → /start «Открыть приложение», /profile, /camps, /courses
+67. Установить вебхук для бота:
+POST https://api.telegram.org/bot{TOKEN}/setWebhook
+{ "url": "https://volleydzen.ru/api/webhook/telegram" }
+68. Обработчик /start в /api/webhook/telegram: отправляет приветствие + кнопку
+«Открыть»
+
+14.3 CI/CD Pipeline (GitHub Actions)
+# .github/workflows/deploy.yml
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+      - run: npm run build
+      - run: npx prisma migrate deploy
+        env: { DATABASE_URL: ${{ secrets.DATABASE_URL }} }
+      - name: Deploy to Timeweb
+        run: |
+          # rsync или Timeweb Cloud CLI
+          rsync -avz .next/ user@timeweb-server:/app/.next/
+          ssh user@timeweb-server "pm2 restart volleydzen"
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 44
+
+14.4 Окружения
+Окружение Ветка Назначение
+Development feature/* Локальная разработка, тестовый бот
+Staging develop Тестирование перед релизом, тестовый
+магазин ЮKassa
+Production main Продуктивная среда, реальные платежи
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 45
+15. НЕФУНКЦИОНАЛЬНЫЕ ТРЕБОВАНИЯ
+15.1 Производительность
+Метрика Требование Как обеспечить
+LCP (Largest Contentful Paint) < 2.5 сек Next.js Image, WebP, ISR
+TTFB (Time to First Byte) < 300 мс Timeweb Cloud SSD, Redis кэш
+API Response Time (p95) < 800 мс Индексы БД, Prisma select нужных
+полей
+Загрузка на 4G < 3 сек Code splitting, lazy loading, минификация
+500 одновременных
+пользователей
+Без деградации Node.js кластер (pm2), Redis rate limit
+
+15.2 Совместимость
+• iOS Safari 15+ (Telegram iOS)
+• Android Chrome 90+ (Telegram Android)
+• Telegram Desktop (WebK/WebZ)
+• Ширина экрана 320–430px (iPhone SE до iPhone 15 Pro Max)
+• Тёмная тема: CSS переменные Telegram (--tg-theme-bg-color и т.д.)
+
+15.3 Надёжность
+• Uptime: 99.5% (обеспечивается Timeweb Cloud SLA)
+• Бэкапы БД: ежедневно автоматически, хранение 30 дней
+• Мониторинг: Sentry алерты → Telegram Bot при critical ошибках
+• Retry: 3 попытки с exponential backoff для ЮKassa API
+• Graceful degradation: если Vimeo недоступен → показать thumbnail + сообщение
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 46
+16. ЭТАПЫ РАЗРАБОТКИ И ДОРОЖНАЯ КАРТА
+16.1 Фаза 1 — MVP
+Стек: Next.js 14 + TypeScript + Prisma + PostgreSQL + Timeweb Cloud. Пишем с нуля.
+# Задача Дней Детали
+1 Настройка проекта и
+деплой
+3 Next.js, Prisma, shadcn/ui, Timeweb Cloud, GitHub
+Actions
+2 Telegram авторизация 2 initData HMAC, JWT, авторегистрация, роли
+3 Схема БД и миграции 3 Все таблицы Фазы 1, seed тестовыми данными
+4 Главная страница +
+навигация
+2 Плитки, баннер кэмпа, Telegram SDK
+5 Каталог кэмпов 3 Список, фильтры, карточки, пагинация
+6 Детальная страница кэмпа 4 Все блоки, аккордеоны, галерея
+7 Предбронирование + крон 2 24ч бронь, автоотмена, уведомление
+8 Страница оплаты 3 Типы оплаты, согласия, промокод, проверка
+телефона/email
+9 ЮKassa интеграция 4 API, вебхуки, PDF квитанция, уведомление
+10 Карта (Yandex Maps) 2 Embed, адрес, .ics, маршрут
+11 Каталог курсов 2 Табы, карточки, фильтры
+12 Детальная страница курса 3 Описание, уровни коучинга, покупка
+13 Тренировочный день 4 Структура workout, чекбоксы, таймер, RPE, секции
+14 Vimeo плеер + защита 2 iframe, проверка доступа, прогресс
+15 Личный кабинет 3 Профиль, кэмпы, курсы, платежи, достижения
+16 Кабинет тренера 4 Ученики, видео-отчёты, форма обратной связи,
+редактор курсов
+17 Уведомления (Bot API) 2 Все типы из раздела 11, крон-задачи
+18 Манифест и Новости 1 Статичный контент, список новостей
+19 Админ-панель 8 Dashboard, кэмпы, курсы, пользователи, рассылки,
+промокоды, управление admin
+20 QA и баг-фикс 5 Тестирование всех сценариев, edge cases
+21 Деплой production 2 Prod окружение, бот, домен, мониторинг
+— ИТОГО 64
+дня
+~13 рабочих недель
+
+16.2 Фаза 2 — Расширение
+Задача Дней
+Путь Энсо (система уровней) 5
+Мерч-магазин 6
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 47
+Задача Дней
+Офлайн тренировки 4
+Консультации с тренером 4
+Расширенная аналитика в /admin 5
+Система отзывов и рейтингов 4
+Бейджи и достижения 3
+ИТОГО Фаза 2 31 день (~6 недель)
+
+16.3 Ключевые зависимости (package.json)
+{
+  "dependencies": {
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "typescript": "^5.4.0",
+    "@prisma/client": "^5.14.0",
+    "prisma": "^5.14.0",
+    "tailwindcss": "^3.4.0",
+    "zod": "^3.23.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "ioredis": "^5.3.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@react-pdf/renderer": "^3.4.0",
+    "date-fns": "^3.6.0",
+    "react-hook-form": "^7.51.0",
+    "sharp": "^0.33.0",
+    "node-cron": "^3.0.3"
+  }
+}
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 48
+17. ОТКРЫТЫЕ ВОПРОСЫ
+17.1 Срочные — нужен ответ до начала разработки
+# Вопрос Почему важно
+1 Зарегистрировано ли ИП/ООО и
+подключено ли к ЮKassa?
+Без этого платёжный модуль не запустится. Срок
+подключения 3-5 рабочих дней.
+2 Есть ли готовые тексты ПДн-
+согласия и вайвера?
+Они нужны в форме оплаты. Юридически
+корректные тексты должен подготовить
+заказчик/юрист.
+3 Vimeo — есть ли уже аккаунт Pro с
+загруженными видео?
+Нужно знать как именно хранятся видео курсов из
+PuzzleBot чтобы правильно настроить импорт.
+4 Домен volleydzen.ru — есть? Кто
+управляет DNS?
+Нужен для Timeweb Cloud и настройки SSL.
+
+17.2 Уточнить до Фазы 1
+# Вопрос
+1 Как именно работает «Путь Энсо»? За что начисляются очки? Какие уровни (Shoshin,
+Shugyosha, Jukuren, Satori, …)?
+2 Рассрочка «Сплит» — сколько месяцев? 3, 6, 12? Есть ли комиссия которую берёт
+ЮKassa с пользователя?
+3 Отправка видео учениками: прямо через форму в приложении (загрузка файла → S3)
+или ссылка на Google Drive/Telegram?
+4 Один владелец управляет всем или планируются несколько admin с разными зонами
+ответственности?
+5 Нужен ли экспорт списков участников кэмпов в Excel? Формат?
+
+
+VOLLEYDZEN — Техническое задание v2.0  |  Конфиденциально
+Стр. 49
+КОНЕЦ ДОКУМЕНТА
+VOLLEYDZEN Telegram Mini App — Техническое задание v2.0
+
+Документ подготовлен Согласован с заказчиком Дата согласования
+_______________________ _______________________ _____ / _____ / _____
