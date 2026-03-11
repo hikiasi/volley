@@ -2,77 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0A0A0A;
-  --foreground: #ffffff;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-}
-
-/* Telegram Mini App Theme Variables Support */
-:root {
-  --tg-theme-bg-color: #0A0A0A;
-  --tg-theme-text-color: #ffffff;
-  --tg-theme-hint-color: #aaaaaa;
-  --tg-theme-link-color: #E63946;
-  --tg-theme-button-color: #E63946;
-  --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: #1A1A1A;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
   :root {
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+    --bg: #000000;
+    --card-from: #121213;
+    --card-to: #1A1B1E;
+    --text: #FFFFFF;
+    --muted: rgba(255, 255, 255, 0.8);
+    --line: rgba(255, 255, 255, 0.08);
+    --accent: #FF2D2D;
+    --accent-quiet: rgba(255, 45, 45, 0.85);
+    --success: #1DB954;
+    --warning: #FFC857;
+    --error: #FF5252;
+    --rank-green: #1ED760;
+    --rank-bronze: #8B5A2B;
+    --rank-white: #E8E8E8;
+    --rank-gold: #FFD54F;
+    --rank-enso: #FF2D2D;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
+    --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.25);
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 240 5.9% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 240 5.9% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 100% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 100%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 0 100% 59%;
+    --radius: 0.5rem;
   }
 }
 
@@ -82,5 +52,49 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
   }
 }
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Glass-lite cards */
+.glass-card {
+  background: linear-gradient(180deg, var(--card-from), var(--card-to));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+}
+
+/* Tiles grid */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tile {
+  position: relative;
+  padding: 16px;
+  border-radius: 16px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--card-from), var(--card-to));
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease;
+}
+
+.tile:active {
+  transform: scale(0.95);
+}
+
+/* Custom colors for tags/status */
+.ok { color: #6BE38C; }
+.accent { color: #FF2D2D; }
+.warn { color: #FFD166; }
