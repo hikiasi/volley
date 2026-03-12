@@ -12,6 +12,9 @@ import { Camp } from "@prisma/client";
 export default function CampDetailPage({ params }: { params: { slug: string } }) {
   const [camp, setCamp] = useState<Camp | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentType, setPaymentType] = useState<"full" | "deposit" | "installment">("full");
+  const [consents, setConsents] = useState({ pdp: false, waiver: false });
 
   useEffect(() => {
     async function fetchCamp() {
@@ -49,6 +52,11 @@ export default function CampDetailPage({ params }: { params: { slug: string } })
   };
 
   const handlePay = async () => {
+    if (!consents.pdp || !consents.waiver) {
+      alert("Пожалуйста, примите все обязательные согласия");
+      return;
+    }
+
     try {
         const token = localStorage.getItem("token");
         const res = await fetch(`/api/camps/${params.slug}/book`, {
@@ -57,7 +65,11 @@ export default function CampDetailPage({ params }: { params: { slug: string } })
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json"
           },
-          body: JSON.stringify({ paymentType: "full" })
+          body: JSON.stringify({
+            paymentType,
+            pdpConsent: consents.pdp,
+            waiverConsent: consents.waiver
+          })
         });
         if (res.ok) {
           const { paymentUrl } = await res.json();
@@ -191,7 +203,7 @@ export default function CampDetailPage({ params }: { params: { slug: string } })
             Предбронь
           </button>
           <button
-            onClick={handlePay}
+            onClick={() => setShowCheckout(true)}
             className="flex-[1.5] bg-[#FF2D2D] text-white h-14 rounded-2xl font-black uppercase text-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >
             <CreditCard className="w-5 h-5" />
@@ -199,6 +211,78 @@ export default function CampDetailPage({ params }: { params: { slug: string } })
           </button>
         </div>
       </div>
+
+      {/* Checkout Modal Overlay */}
+      {showCheckout && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl animate-in fade-in duration-300 p-4 flex items-end">
+          <div className="w-full max-w-[430px] mx-auto glass-card p-6 space-y-6 animate-in slide-in-from-bottom duration-500">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-black uppercase italic tracking-tighter">Оплата кэмпа</h2>
+              <button onClick={() => setShowCheckout(false)} className="text-white/40 text-xs font-bold uppercase">Закрыть</button>
+            </div>
+
+            <div className="space-y-3">
+               <span className="text-[10px] font-black uppercase text-white/30 tracking-widest">Выберите тип оплаты</span>
+               <div className="grid grid-cols-1 gap-2">
+                 <button
+                    onClick={() => setPaymentType("full")}
+                    className={`p-4 rounded-xl border flex justify-between items-center transition-all ${paymentType === 'full' ? 'bg-[#FF2D2D]/10 border-[#FF2D2D]' : 'bg-white/5 border-white/5'}`}
+                 >
+                   <span className="text-xs font-bold uppercase">Полная оплата</span>
+                   <span className="text-sm font-black italic">{(camp.basePrice / 100).toLocaleString()} ₽</span>
+                 </button>
+
+                 {camp.depositAmount && (
+                    <button
+                      onClick={() => setPaymentType("deposit")}
+                      className={`p-4 rounded-xl border flex justify-between items-center transition-all ${paymentType === 'deposit' ? 'bg-[#FF2D2D]/10 border-[#FF2D2D]' : 'bg-white/5 border-white/5'}`}
+                    >
+                      <span className="text-xs font-bold uppercase">Депозит (бронь)</span>
+                      <span className="text-sm font-black italic">{(camp.depositAmount / 100).toLocaleString()} ₽</span>
+                    </button>
+                 )}
+
+                 <button
+                    onClick={() => setPaymentType("installment")}
+                    className={`p-4 rounded-xl border flex justify-between items-center transition-all ${paymentType === 'installment' ? 'bg-[#FF2D2D]/10 border-[#FF2D2D]' : 'bg-white/5 border-white/5'}`}
+                 >
+                   <span className="text-xs font-bold uppercase">Сплит (рассрочка)</span>
+                   <Badge className="bg-[#1DB954] text-[8px]">0%</Badge>
+                 </button>
+               </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consents.pdp}
+                  onChange={e => setConsents({...consents, pdp: e.target.checked})}
+                  className="mt-1 w-4 h-4 rounded border-white/10 bg-white/5 accent-[#FF2D2D]"
+                />
+                <span className="text-[10px] text-white/50 leading-tight">Я согласен на <a href="#" className="underline text-white/70">обработку персональных данных</a></span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consents.waiver}
+                  onChange={e => setConsents({...consents, waiver: e.target.checked})}
+                  className="mt-1 w-4 h-4 rounded border-white/10 bg-white/5 accent-[#FF2D2D]"
+                />
+                <span className="text-[10px] text-white/50 leading-tight">Я принимаю условия <a href="#" className="underline text-white/70">публичной оферты и вайвера</a></span>
+              </label>
+            </div>
+
+            <button
+              onClick={handlePay}
+              disabled={!consents.pdp || !consents.waiver}
+              className="w-full bg-[#FF2D2D] h-14 rounded-2xl font-black uppercase text-sm disabled:opacity-30 transition-all flex items-center justify-center gap-2"
+            >
+              Перейти к оплате
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
