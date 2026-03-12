@@ -30,13 +30,7 @@ export async function GET(req: NextRequest) {
       take: 50
     });
 
-    // Serialize BigInt
-    const serializedUsers = users.map(user => ({
-      ...user,
-      telegramId: user.telegramId?.toString() || null
-    }));
-
-    return NextResponse.json(serializedUsers);
+    return NextResponse.json(users);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
