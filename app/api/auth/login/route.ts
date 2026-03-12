@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,21 +17,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = jwt.sign(
-      { sub: user.id, role: user.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as jwt.SignOptions["expiresIn"] }
-    );
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const token = await new SignJWT({ sub: user.id, role: user.role })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime(process.env.JWT_EXPIRES_IN || "7d")
+      .sign(secret);
 
     const response = NextResponse.json({
       token,
       user: { id: user.id, email: user.email, firstName: user.firstName }
     });
+
+    // Calculate expiration in seconds for cookie (7 days)
+    const maxAge = 7 * 24 * 60 * 60;
+
     response.cookies.set("auth_token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 7 * 24 * 60 * 60
+        secure: true,
+        sameSite: "none",
+        path: "/",
+        maxAge: maxAge
     });
 
     return response;

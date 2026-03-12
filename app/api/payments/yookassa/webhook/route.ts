@@ -60,10 +60,12 @@ export async function POST(req: NextRequest) {
             data: { receiptUrl },
           });
 
-          await sendTelegramMessage(
-            result.payment.user.telegramId.toString(),
-            `🎉 Оплата прошла успешно! Вы участник кэмпа ${result.booking.camp.title}.\nКвитанция: ${receiptUrl}`
-          );
+          if (result.payment.user.telegramId) {
+            await sendTelegramMessage(
+              result.payment.user.telegramId.toString(),
+              `🎉 Оплата прошла успешно! Вы участник кэмпа ${result.booking.camp.title}.\nКвитанция: ${receiptUrl}`
+            );
+          }
         } catch (postError) {
           console.error("Post-payment action error:", postError);
           // Still return ok to Yookassa
