@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
   History,
   CalendarDays,
@@ -26,6 +31,18 @@ const navItems = [
 ];
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth/login");
+    }
+  }, [user, loading, router]);
+
+  if (loading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white font-bold uppercase">Загрузка...</div>;
+  if (!user) return null;
+
   return (
     <div className="container mx-auto px-3 py-4 max-w-[430px]">
       <header className="flex items-center justify-between mb-4">

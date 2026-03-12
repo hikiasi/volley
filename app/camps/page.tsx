@@ -2,48 +2,15 @@ import { getCamps } from "@/lib/camps";
 import { CampCard } from "@/components/camp-card";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import { CampStatus } from "@prisma/client";
 
-// Mock data fallback since DB might not be connected in this env
-const MOCK_CAMPS = [
-  {
-    id: "1",
-    slug: 'moscow-october-2024',
-    title: 'Москва · Октябрь',
-    city: 'Москва',
-    level: 'Shoshin',
-    startDate: new Date('2024-10-12'),
-    endDate: new Date('2024-10-14'),
-    durationDays: 3,
-    basePrice: 1500000,
-    maxParticipants: 25,
-    currentParticipants: 18,
-    status: 'published' as CampStatus,
-    hotMessage: '🔥 Спец-кэмп «Power Jump» · −10% до 12.10',
-  },
-  {
-    id: "2",
-    slug: 'spb-november-2024',
-    title: 'Санкт-Петербург · Ноябрь',
-    city: 'Санкт-Петербург',
-    level: 'Shugyosha',
-    startDate: new Date('2024-11-05'),
-    endDate: new Date('2024-11-07'),
-    durationDays: 3,
-    basePrice: 1800000,
-    maxParticipants: 20,
-    currentParticipants: 5,
-    status: 'published' as CampStatus,
-  }
-];
+import { Camp } from "@prisma/client";
 
 export default async function CampsPage() {
-  let camps = [];
+  let camps: Camp[] = [];
   try {
     camps = await getCamps();
-    if (camps.length === 0) camps = MOCK_CAMPS;
-  } catch {
-    camps = MOCK_CAMPS;
+  } catch (err) {
+    console.error("Failed to fetch camps:", err);
   }
 
   return (

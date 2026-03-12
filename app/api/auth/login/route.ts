@@ -23,7 +23,10 @@ export async function POST(req: NextRequest) {
       { expiresIn: (process.env.JWT_EXPIRES_IN || "7d") as jwt.SignOptions["expiresIn"] }
     );
 
-    const response = NextResponse.json({ user: { id: user.id, email: user.email, firstName: user.firstName } });
+    const response = NextResponse.json({
+      token,
+      user: { id: user.id, email: user.email, firstName: user.firstName }
+    });
     response.cookies.set("auth_token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

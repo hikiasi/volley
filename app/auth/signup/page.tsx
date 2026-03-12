@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [loading, setLoading] = useState(false);
+  const { user, login } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (user) router.push("/");
+  }, [user, router]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +26,9 @@ export default function SignupPage() {
         body: JSON.stringify({ email, password, firstName }),
       });
       if (res.ok) {
-        const { token } = await res.json();
-        localStorage.setItem("token", token);
-        router.push("/profile");
+        const { token, user: userData } = await res.json();
+        login(token, userData);
+        router.push("/");
       } else {
         const err = await res.json();
         alert(`Ошибка: ${err.error}`);
@@ -71,6 +77,26 @@ export default function SignupPage() {
             {loading ? "Загрузка..." : "Создать аккаунт"}
           </button>
         </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-white/10"></span></div>
+          <div className="relative flex justify-center text-[10px] uppercase font-bold"><span className="bg-[#0A0A0A] px-2 text-white/40">или</span></div>
+        </div>
+
+        <button
+          onClick={() => {
+             const tg = (window as { Telegram?: { WebApp?: { initData: string } } }).Telegram?.WebApp;
+             if (tg?.initData) {
+                 window.location.reload(); // AuthProvider will handle it
+             } else {
+                 alert("Зайдите через Telegram Mini App");
+             }
+          }}
+          className="w-full bg-[#0088cc] text-white py-4 rounded-xl font-black uppercase text-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+        >
+          Войти через Telegram
+        </button>
+
         <div className="text-center text-xs text-white/40">
           Уже есть аккаунт? <Link href="/auth/login" className="text-[#FF2D2D] font-bold">Войти</Link>
         </div>

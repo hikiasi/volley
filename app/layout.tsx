@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
+import { AuthProvider } from "@/components/auth/auth-provider";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -31,9 +32,11 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.className} bg-[#0A0A0A] text-white min-h-screen antialiased overflow-x-hidden`}>
-        <main className="max-w-[430px] mx-auto min-h-screen relative pb-20">
-          {children}
-        </main>
+        <AuthProvider>
+          <main className="max-w-[430px] mx-auto min-h-screen relative pb-20">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
