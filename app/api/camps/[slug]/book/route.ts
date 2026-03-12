@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createYookassaPayment } from "@/lib/yookassa";
-
-import { jwtVerify } from "jose";
-
-async function getUserFromRequest(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const token = authHeader.split(" ")[1];
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    return payload;
-  } catch {
-    return null;
-  }
-}
+import { getUserFromRequest } from "@/lib/auth";
 
 export async function POST(
   req: NextRequest,

@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { jwtVerify } from 'jose';
+import { getUserFromRequest } from "@/lib/auth";
 
 async function isAdmin(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return false;
-  const token = authHeader.split(" ")[1];
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const { payload } = await jwtVerify(token, secret);
-    return payload.role === 'admin';
-  } catch {
-    return false;
-  }
+  const payload = await getUserFromRequest(req);
+  return payload?.role === 'admin';
 }
 
 export async function GET(req: NextRequest) {
