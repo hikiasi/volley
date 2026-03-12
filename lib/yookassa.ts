@@ -49,6 +49,10 @@ export async function createYookassaPayment(params: {
 
 export function isYookassaIP(ip: string): boolean {
   const whitelist = (process.env.YOOKASSA_WEBHOOK_IP_WHITELIST || "185.71.76.0/27,185.71.77.0/27").split(",");
-  // Simplified IP check for MVP, in production use a library like `ip-range-check`
-  return whitelist.some(range => ip.startsWith(range.split(".")[0]));
+  // Improved IP check for MVP: Validate first three octets for common YooKassa ranges
+  return whitelist.some(range => {
+    const parts = range.split(".");
+    const prefix = parts.slice(0, 3).join(".");
+    return ip.startsWith(prefix + ".");
+  });
 }
