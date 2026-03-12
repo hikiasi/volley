@@ -29,7 +29,7 @@ enum PlayLevel {
 
 model User {
   id                    String    @id @default(uuid())
-  telegramId            BigInt    @unique @map("telegram_id")
+  telegramId            BigInt?   @unique @map("telegram_id")
   role                  UserRole  @default(user)
 
   // Данные из Telegram

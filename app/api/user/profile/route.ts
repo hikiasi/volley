@@ -35,8 +35,16 @@ export async function GET(req: NextRequest) {
         include: {
             bookings: { include: { camp: true } },
             userCourses: { include: { course: true } },
+            ensoLevel: true,
         }
     });
 
-    return NextResponse.json(user);
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    const safeUser = {
+      ...user,
+      telegramId: user.telegramId?.toString(),
+    };
+
+    return NextResponse.json(safeUser);
 }

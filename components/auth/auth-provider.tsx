@@ -35,7 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const tg = (window as { Telegram?: { WebApp?: { initData: string } } }).Telegram?.WebApp;
       const initData = tg?.initData;
 
-      if (initData) {
+      // Only auto-login via TG if we are in Mini App and don't have a token yet
+      const existingToken = localStorage.getItem("token");
+
+      if (initData && !existingToken) {
         try {
           const res = await fetch("/api/auth/telegram", {
             method: "POST",
@@ -51,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           console.error("TG Auth error:", err);
         }
-      } else {
+      } else if (existingToken) {
           // Check for existing token
           const token = localStorage.getItem("token");
           if (token) {
