@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { isYookassaIP } from "@/lib/yookassa";
 import { sendTelegramMessage } from "@/lib/notifications";
 import { generateAndUploadReceipt } from "@/lib/pdf";
+import { generateCampICS } from "@/lib/calendar";
+import { uploadToS3 } from "@/lib/pdf";
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,9 +63,24 @@ export async function POST(req: NextRequest) {
           });
 
           if (result.payment.user.telegramId) {
+            // Generate .ics for calendar
+            const icsBuffer = generateCampICS({
+              title: result.booking.camp.title,
+              startDate: result.booking.camp.startDate,
+              endDate: result.booking.camp.endDate,
+              address: result.booking.camp.address,
+              city: result.booking.camp.city
+            });
+            const icsUrl = await uploadToS3(`calendars/${result.booking.id}.ics`, icsBuffer, "text/calendar");
+
             await sendTelegramMessage(
               result.payment.user.telegramId.toString(),
-              `🎉 Оплата прошла успешно! Вы участник кэмпа ${result.booking.camp.title}.\nКвитанция: ${receiptUrl}`
+              `🎉 Оплата прошла успешно! Вы участник кэмпа <b>${result.booking.camp.title}</b>.\n\n📍 Адрес: ${result.booking.camp.address || result.booking.camp.city}\n📅 Дата: ${result.booking.camp.startDate.toLocaleDateString('ru-RU')}`,
+              [
+                { text: "🧾 Квитанция PDF", url: receiptUrl },
+                { text: "📅 В календарь .ics", url: icsUrl },
+                { text: "💬 Чат участников", url: result.booking.camp.participantsChatUrl || "https://t.me/volleydzen" }
+              ]
             );
           }
         } catch (postError) {

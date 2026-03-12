@@ -13,3 +13,24 @@
  ✓ Compiled /auth/login in 6.9s (556 modules)
  ✓ Compiled in 872ms (266 modules)
  GET /auth/login 200 in 7885ms
+ ✓ Compiled in 3.6s (266 modules)
+ ✓ Compiled in 410ms (266 modules)
+ ✓ Compiled in 222ms (266 modules)
+ ✓ Compiled in 189ms (266 modules)
+ ✓ Compiled in 205ms (266 modules)
+ ✓ Compiled in 320ms (266 modules)
+ ✓ Compiled in 420ms (266 modules)
+ ✓ Compiled in 340ms (266 modules)
+ ✓ Compiled in 328ms (266 modules)
+ ✓ Compiled in 331ms (266 modules)
+ ✓ Compiled in 190ms (266 modules)
+ ✓ Compiled in 880ms (266 modules)
+ ○ Compiling /_not-found ...
+ ✓ Compiled /_not-found in 872ms (536 modules)
+ GET /auth/login 404 in 1483ms
+ GET /_next/static/css/app/layout.css?v=1773323000871 404 in 50ms
+ GET /_next/static/media/21350d82a1f187e9-s.p.woff2 404 in 60ms
+ GET /_next/static/media/e4af272ccee01ff0-s.p.woff2 404 in 59ms
+ GET /_next/static/chunks/app-pages-internals.js 404 in 53ms
+ GET /_next/static/chunks/main-app.js?v=1773323000871 404 in 55ms
+ GET /_next/static/chunks/app/layout.js 404 in 53ms

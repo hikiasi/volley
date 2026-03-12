@@ -12,10 +12,12 @@ export async function POST(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { paymentType, promoCodeId, selectedDayIds } = body as {
+    const { paymentType, promoCodeId, selectedDayIds, pdpConsent, waiverConsent } = body as {
       paymentType: "full" | "deposit" | "installment",
       promoCodeId?: string,
-      selectedDayIds?: string[]
+      selectedDayIds?: string[],
+      pdpConsent: boolean,
+      waiverConsent: boolean
     };
 
     const camp = await prisma.camp.findUnique({
@@ -38,18 +40,39 @@ export async function POST(
       }
     }
 
-    const booking = await prisma.booking.create({
-      data: {
-        userId: user.sub as string,
-        campId: camp.id,
-        status: "pre_booked",
-        paymentType,
-        baseAmount: camp.basePrice,
-        totalAmount: Math.round(totalAmount),
-        selectedDayIds: selectedDayIds || [],
-        preBookedAt: new Date(),
-        preBookExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
+    // Check occupancy and create booking transactionally
+    const booking = await prisma.$transaction(async (tx) => {
+      // Find existing pre-booking to avoid double counting if they already pre-booked
+      const existing = await tx.booking.findFirst({
+        where: { userId: user.sub as string, campId: camp.id, status: "pre_booked" }
+      });
+
+      if (!existing) {
+        const updatedCamp = await tx.camp.update({
+          where: { id: camp.id },
+          data: { currentParticipants: { increment: 1 } }
+        });
+
+        if (updatedCamp.currentParticipants > updatedCamp.maxParticipants) {
+          throw new Error("Camp is full");
+        }
+      }
+
+      return await tx.booking.create({
+        data: {
+          userId: user.sub as string,
+          campId: camp.id,
+          status: "pre_booked",
+          paymentType,
+          baseAmount: camp.basePrice,
+          totalAmount: Math.round(totalAmount),
+          selectedDayIds: selectedDayIds || [],
+          preBookedAt: new Date(),
+          preBookExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          pdpConsent,
+          waiverConsent,
+        },
+      });
     });
 
     const payment = await createYookassaPayment({

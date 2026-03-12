@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, Settings, Award, Calendar, PlayCircle, CreditCard, ChevronRight } from "lucide-react";
+import { ChevronLeft, Settings, Award, Calendar, PlayCircle, CreditCard, ChevronRight, LogOut, Shield } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Progress, ProgressTrack, ProgressIndicator } from "@/components/ui/progress";
@@ -13,6 +13,7 @@ interface ProfileUser {
   username?: string;
   email?: string;
   photoUrl?: string;
+  role?: "user" | "trainer" | "admin";
   ensoPoints?: number;
   ensoLevel?: { name: string };
   bookings?: unknown[];
@@ -53,6 +54,11 @@ export default function ProfilePage() {
 
   const ensoPoints = user.ensoPoints || 0;
   const nextLevelPoints = 2000; // Mock
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/auth/login";
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-24">
@@ -132,7 +138,34 @@ export default function ProfilePage() {
                <ChevronRight className="w-4 h-4 text-white/20" />
              </Link>
            ))}
+
+           {user.role === "admin" && (
+             <Link href="/admin" className="flex items-center justify-between p-4 glass-card active:scale-[0.98] transition-all bg-blue-500/5 border-blue-500/10">
+               <div className="flex items-center gap-3">
+                 <Shield className="w-5 h-5 text-blue-400" />
+                 <span className="text-xs font-black uppercase text-blue-400 tracking-wider">Панель управления</span>
+               </div>
+               <ChevronRight className="w-4 h-4 text-blue-400/20" />
+             </Link>
+           )}
+
+           <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between p-4 glass-card active:scale-[0.98] transition-all bg-red-500/5 border-red-500/10"
+           >
+             <div className="flex items-center gap-3">
+               <LogOut className="w-5 h-5 text-[#FF2D2D]" />
+               <span className="text-xs font-black uppercase text-[#FF2D2D] tracking-wider">Выйти из аккаунта</span>
+             </div>
+           </button>
         </section>
+
+        {/* 152-FZ Footer */}
+        <div className="text-center pt-4">
+           <p className="text-[9px] text-white/20 font-medium leading-relaxed px-10">
+             Все ваши данные хранятся на защищенных серверах на территории РФ в соответствии с 152-ФЗ.
+           </p>
+        </div>
       </div>
     </div>
   );
