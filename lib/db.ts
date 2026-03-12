@@ -2,7 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-(BigInt.prototype as any).toJSON = function () {
+// @ts-expect-error BigInt toJSON serialization
+BigInt.prototype.toJSON = function () {
   return this.toString();
 };
 

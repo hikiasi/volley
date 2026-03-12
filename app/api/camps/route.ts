@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const city = searchParams.get("city");
 
   try {
-    const where: any = {};
+    const where: Record<string, string> = {};
     if (status) where.status = status;
     if (city) where.city = city;
 

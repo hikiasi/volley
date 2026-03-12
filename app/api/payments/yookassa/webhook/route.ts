@@ -27,11 +27,25 @@ export async function POST(req: NextRequest) {
         });
 
         if (metadata.booking_id) {
+          const existingBooking = await tx.booking.findUnique({
+            where: { id: metadata.booking_id },
+            include: { camp: true }
+          });
+
+          if (!existingBooking) throw new Error("Booking not found");
+
+          const newPaidAmount = Math.round(parseFloat(amount.value) * 100);
+          const totalPaid = existingBooking.paidAmount + newPaidAmount;
+
+          // Determine new status based on whether the full amount is now paid
+          const newStatus = totalPaid >= existingBooking.totalAmount ? "fully_paid" : "deposit_paid";
+
           const booking = await tx.booking.update({
             where: { id: metadata.booking_id },
             data: {
-              status: "fully_paid",
-              paidAmount: Math.round(parseFloat(amount.value) * 100)
+              status: newStatus,
+              paidAmount: totalPaid,
+              remainingAmount: Math.max(0, existingBooking.totalAmount - totalPaid)
             },
             include: { camp: true },
           });

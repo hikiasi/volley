@@ -4,52 +4,47 @@ import { LayoutDashboard, Tent, GraduationCap, Users, CreditCard, Bell } from "l
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-neutral-950 text-white">
+    <div className="flex h-screen bg-[#0A0A0A] text-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 flex flex-col">
-        <div className="p-6">
-          <div className="text-xl font-black italic text-[#FF2D2D] tracking-tighter">VOLLEYDZEN</div>
-          <div className="text-[10px] text-white/40 uppercase font-bold">Admin Panel</div>
+      <aside className="w-72 border-r border-white/5 flex flex-col bg-[#0F0F0F] shrink-0">
+        <div className="p-8">
+          <div className="text-2xl font-black italic text-[#FF2D2D] tracking-tighter leading-none">VOLLEYDZEN</div>
+          <div className="text-[10px] text-white/30 uppercase font-black tracking-[0.2em] mt-2">Admin Panel</div>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1">
-          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <LayoutDashboard className="w-4 h-4" />
-            Dashboard
-          </Link>
-          <Link href="/admin/camps" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <Tent className="w-4 h-4" />
-            Кэмпы
-          </Link>
-          <Link href="/admin/courses" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <GraduationCap className="w-4 h-4" />
-            Курсы
-          </Link>
-          <Link href="/admin/users" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <Users className="w-4 h-4" />
-            Пользователи
-          </Link>
-          <Link href="/admin/payments" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <CreditCard className="w-4 h-4" />
-            Платежи
-          </Link>
-          <Link href="/admin/notifications" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold">
-            <Bell className="w-4 h-4" />
-            Рассылки
-          </Link>
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+          {[
+            { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+            { icon: Tent, label: "Кэмпы", href: "/admin/camps" },
+            { icon: GraduationCap, label: "Курсы", href: "/admin/courses" },
+            { icon: Users, label: "Пользователи", href: "/admin/users" },
+            { icon: CreditCard, label: "Платежи", href: "/admin/payments" },
+            { icon: Bell, label: "Рассылки", href: "/admin/notifications" },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex items-center gap-4 px-5 py-4 rounded-2xl hover:bg-white/5 transition-all group active:scale-[0.98]"
+            >
+              <item.icon className="w-5 h-5 text-white/40 group-hover:text-[#FF2D2D] transition-colors" />
+              <span className="text-sm font-black uppercase italic tracking-tight text-white/70 group-hover:text-white">{item.label}</span>
+            </Link>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
-           <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/5 transition-colors text-sm font-bold text-white/50">
-            <ArrowBack className="w-4 h-4" />
+        <div className="p-6 border-t border-white/5 bg-black/20">
+           <Link href="/" className="flex items-center gap-4 px-5 py-4 rounded-2xl hover:bg-white/5 transition-all text-sm font-black uppercase italic text-white/30 hover:text-white">
+            <ArrowBack className="w-5 h-5" />
             В приложение
           </Link>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8 max-w-none">
-        {children}
+      <main className="flex-1 overflow-y-auto bg-[#0A0A0A]">
+        <div className="p-10 max-w-7xl mx-auto w-full">
+            {children}
+        </div>
       </main>
     </div>
   );
@@ -65,7 +60,7 @@ function ArrowBack(props: ComponentProps<"svg">) {
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
         >

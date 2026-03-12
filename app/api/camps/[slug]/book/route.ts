@@ -27,7 +27,7 @@ export async function POST(
     if (!camp) return NextResponse.json({ error: "Camp not found" }, { status: 404 });
 
     // Calculate final amount
-    let totalAmount = camp.basePrice;
+    let totalAmount = paymentType === 'deposit' ? (camp.depositAmount || camp.basePrice) : camp.basePrice;
 
     if (promoCodeId) {
       const promo = await prisma.promoCode.findUnique({ where: { id: promoCodeId } });
