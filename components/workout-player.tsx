@@ -3,9 +3,20 @@
 import { Timer, RotateCcw, Play, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
+interface ExerciseItem {
+  id: string;
+  title: string;
+  videoUrl?: string;
+  sets?: number;
+  reps?: number;
+  duration?: number;
+  rest?: number;
+  technique?: string;
+}
+
 interface Section {
   title: string;
-  items: string[];
+  items: ExerciseItem[];
 }
 
 export function WorkoutPlayer({ sections }: { sections: Section[] }) {
@@ -31,19 +42,39 @@ export function WorkoutPlayer({ sections }: { sections: Section[] }) {
                 <div key={j} className="glass-card p-3 flex items-center justify-between group transition-colors">
                   <div className="flex items-center gap-3">
                     <button
-                      onClick={() => setActiveVideo("https://rutube.ru/play/embed/8683515")}
-                      className="w-8 h-8 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center text-[#FF2D2D] active:scale-90 transition-transform"
+                      onClick={() => item.videoUrl && setActiveVideo(item.videoUrl)}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center active:scale-90 transition-transform ${
+                        item.videoUrl ? 'bg-[#FF2D2D]/10 text-[#FF2D2D]' : 'bg-white/5 text-white/20 opacity-50'
+                      }`}
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                     </button>
                     <div>
                       <div className={`text-xs font-bold mb-0.5 transition-opacity ${completed[id] ? 'opacity-30 line-through' : ''}`}>
-                        {item}
+                        {item.title}
                       </div>
                       <div className="flex items-center gap-2 text-[9px] text-white/30 font-medium">
-                        <div className="flex items-center gap-1"><RotateCcw className="w-2.5 h-2.5" /> 3 подхода</div>
-                        <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
-                        <div className="flex items-center gap-1"><Timer className="w-2.5 h-2.5" /> 60с отдых</div>
+                        {item.sets && (
+                          <div className="flex items-center gap-1"><RotateCcw className="w-2.5 h-2.5" /> {item.sets} подходов</div>
+                        )}
+                        {item.reps && (
+                          <>
+                            <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                            <div className="flex items-center gap-1">× {item.reps}</div>
+                          </>
+                        )}
+                        {item.duration && (
+                          <>
+                            <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                            <div className="flex items-center gap-1"><Timer className="w-2.5 h-2.5" /> {item.duration}с</div>
+                          </>
+                        )}
+                        {item.rest && (
+                          <>
+                            <div className="w-0.5 h-0.5 rounded-full bg-white/20" />
+                            <div className="flex items-center gap-1"><Timer className="w-2.5 h-2.5" /> {item.rest}с отдых</div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

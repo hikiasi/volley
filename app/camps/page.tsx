@@ -5,6 +5,8 @@ import Link from "next/link";
 
 import { Camp } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+
 export default async function CampsPage() {
   let camps: Camp[] = [];
   try {

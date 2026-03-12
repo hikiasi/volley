@@ -6,6 +6,20 @@ export async function createBooking(userId: string, campId: string, paymentType:
   });
 
   if (!camp) throw new Error("Camp not found");
+
+  // Check if user already has an active booking for this camp
+  const existingBooking = await prisma.booking.findFirst({
+    where: {
+      userId,
+      campId,
+      status: { in: ['pre_booked', 'deposit_paid', 'fully_paid'] }
+    }
+  });
+
+  if (existingBooking) {
+    throw new Error("You already have an active booking for this camp");
+  }
+
   if (camp.currentParticipants >= camp.maxParticipants) {
     // Check if waitlist is full or disabled
     throw new Error("Camp is full");
