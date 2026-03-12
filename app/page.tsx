@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
+import { Camp } from "@prisma/client";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import {
   History,
   CalendarDays,
@@ -31,16 +34,37 @@ const navItems = [
 ];
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [latestCamp, setLatestCamp] = useState<Camp | null>(null);
+  const [loadingCamp, setLoadingCamp] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push("/auth/login");
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
-  if (loading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white font-bold uppercase">Загрузка...</div>;
+  useEffect(() => {
+    async function fetchLatestCamp() {
+      try {
+        const res = await fetch("/api/camps?status=published");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setLatestCamp(data[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch latest camp:", err);
+      } finally {
+        setLoadingCamp(false);
+      }
+    }
+    fetchLatestCamp();
+  }, []);
+
+  if (authLoading) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center text-white font-bold uppercase">Загрузка...</div>;
   if (!user) return null;
 
   return (
@@ -89,47 +113,63 @@ export default function Home() {
       </div>
 
       {/* Promo/Camp Widget */}
-      <div className="glass-card p-4 relative overflow-hidden">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-xl">
-            ⭕
+      {latestCamp ? (
+        <div className="glass-card p-4 relative overflow-hidden">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-xl">
+              {latestCamp.city === 'Москва' ? '🗼' : latestCamp.city === 'Сочи' ? '🌴' : '🏐'}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-bold leading-tight">{latestCamp.city} · {format(new Date(latestCamp.startDate), 'd MMM', { locale: ru })}</div>
+              <div className="text-[11px] text-white/50 mt-0.5">Ближайший кэмп · заполнено {Math.round((latestCamp.currentParticipants / latestCamp.maxParticipants) * 100)}%</div>
+            </div>
+            <Link
+              href={`/camps/${latestCamp.slug}`}
+              className="bg-[#FF2D2D] text-white px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform"
+            >
+              Предбронь
+            </Link>
           </div>
-          <div className="flex-1">
-            <div className="text-sm font-bold leading-tight">Москва · 12–14 окт</div>
-            <div className="text-[11px] text-white/50 mt-0.5">Ближайший кэмп · заполнено 72%</div>
-          </div>
-          <Link
-            href="/camps/1"
-            className="bg-[#FF2D2D] text-white px-4 py-2 rounded-xl font-bold text-xs active:scale-95 transition-transform"
-          >
-            Предбронь
-          </Link>
-        </div>
 
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-white/40">
-            <span>Прогресс мест</span>
-            <span className="text-[#FF2D2D]">Осталось 7 мест</span>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[9px] font-black uppercase tracking-wider text-white/40">
+              <span>Прогресс мест</span>
+              <span className={latestCamp.maxParticipants - latestCamp.currentParticipants <= 5 ? "text-[#FF2D2D]" : ""}>
+                Осталось {latestCamp.maxParticipants - latestCamp.currentParticipants} мест
+              </span>
+            </div>
+            <Progress value={(latestCamp.currentParticipants / latestCamp.maxParticipants) * 100} className="flex-col gap-0 h-auto">
+              <ProgressTrack className="h-1.5 bg-white/5">
+                  <ProgressIndicator className="bg-[#FF2D2D]" />
+              </ProgressTrack>
+            </Progress>
           </div>
-          <Progress value={72} className="flex-col gap-0 h-auto">
-            <ProgressTrack className="h-1.5 bg-white/5">
-                <ProgressIndicator className="bg-[#FF2D2D]" />
-            </ProgressTrack>
-          </Progress>
-        </div>
 
-        <div className="hr my-3 opacity-50" />
-
-        <div className="flex items-center justify-between">
-          <div className="text-[10px] text-white/60 max-w-[180px]">
-            🔥 Спец-кэмп «Power Jump» · −10% до 12.10
-          </div>
-          <div className="flex gap-2">
-             <button className="text-[11px] font-bold text-white/40 uppercase hover:text-white transition-colors">Подробнее</button>
-             <button className="text-[11px] font-black text-[#FF2D2D] uppercase hover:opacity-80 transition-opacity">Оплатить</button>
-          </div>
+          {latestCamp.hotMessage && (
+            <>
+              <div className="hr my-3 opacity-50" />
+              <div className="flex items-center justify-between">
+                <div className="text-[10px] text-white/60 max-w-[180px]">
+                  🔥 {latestCamp.hotMessage}
+                </div>
+                <div className="flex gap-2">
+                   <Link href={`/camps/${latestCamp.slug}`} className="text-[11px] font-bold text-white/40 uppercase hover:text-white transition-colors">Подробнее</Link>
+                   <Link href={`/camps/${latestCamp.slug}/book`} className="text-[11px] font-black text-[#FF2D2D] uppercase hover:opacity-80 transition-opacity">Оплатить</Link>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      </div>
+      ) : loadingCamp ? (
+        <div className="glass-card p-8 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-[#FF2D2D] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="glass-card p-6 text-center border-dashed border-white/10">
+          <div className="text-2xl mb-2">🏐</div>
+          <div className="text-xs font-bold text-white/40 uppercase">Новые кэмпы скоро появятся</div>
+        </div>
+      )}
     </div>
   );
 }

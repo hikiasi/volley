@@ -41,10 +41,5 @@ export async function GET(req: NextRequest) {
 
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const safeUser = {
-      ...user,
-      telegramId: user.telegramId?.toString(),
-    };
-
-    return NextResponse.json(safeUser);
+    return NextResponse.json(user);
 }
