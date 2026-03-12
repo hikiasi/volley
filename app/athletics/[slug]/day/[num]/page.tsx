@@ -12,15 +12,27 @@ export default async function WorkoutDayPage({ params }: { params: { slug: strin
   const currentWeek = course?.weeks.find(w => w.days.some(d => d.dayNumber === dayNum));
   const currentDay = currentWeek?.days.find(d => d.dayNumber === dayNum);
 
-  let sections = [
-    { title: "РАЗМИНКА", items: ["МФР стопы", "Мобильность голеностопа", "Активация ягодиц"] },
-    { title: "ОСНОВНОЙ БЛОК", items: ["Приседания со штангой 3х6", "Болгарские выпады 3х8"] },
-    { title: "ПЛИОМЕТРИКА", items: ["Прыжки на тумбу 4х5", "Дроп-джампы 3х5"] },
-    { title: "ЗАМИНКА", items: ["Растяжка квадрицепса", "Поза ребенка"] },
+  type ExerciseItem = { id: string; title: string; videoUrl?: string; sets?: number; reps?: number; duration?: number; rest?: number; };
+  type Section = { title: string; items: ExerciseItem[]; };
+
+  let sections: Section[] = [
+    {
+      title: "РАЗМИНКА",
+      items: [
+        { id: "1", title: "МФР стопы", sets: 1, duration: 60, videoUrl: "https://rutube.ru/play/embed/8683515" },
+        { id: "2", title: "Мобильность голеностопа", sets: 2, reps: 10 }
+      ]
+    },
+    {
+      title: "ОСНОВНОЙ БЛОК",
+      items: [
+        { id: "3", title: "Приседания со штангой", sets: 3, reps: 6, rest: 90, videoUrl: "https://rutube.ru/play/embed/8683515" }
+      ]
+    },
   ];
 
   if (currentDay && currentDay.exercises.length > 0) {
-    const dbSections: Record<string, string[]> = {
+    const dbSections: Record<string, ExerciseItem[]> = {
       'warmup': [],
       'main': [],
       'plyometric': [],
@@ -30,7 +42,15 @@ export default async function WorkoutDayPage({ params }: { params: { slug: strin
     currentDay.exercises.forEach(de => {
       const section = de.section || 'main';
       if (dbSections[section]) {
-        dbSections[section].push(de.exercise.title);
+        dbSections[section].push({
+          id: de.id,
+          title: de.exercise.title,
+          videoUrl: de.exercise.vimeoVideoId ? `https://rutube.ru/play/embed/${de.exercise.vimeoVideoId}` : undefined,
+          sets: de.sets || undefined,
+          reps: de.reps || undefined,
+          duration: de.durationSecs || undefined,
+          rest: de.restSecs || undefined,
+        });
       }
     });
 

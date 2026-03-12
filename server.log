@@ -1,0 +1,15 @@
+
+> my-app@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 4.6s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1096ms (126 modules)
+ ○ Compiling /auth/login ...
+ ✓ Compiled /auth/login in 6.9s (556 modules)
+ ✓ Compiled in 872ms (266 modules)
+ GET /auth/login 200 in 7885ms
