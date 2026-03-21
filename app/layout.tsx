@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from "next/script";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { BottomNav } from "@/components/layout/BottomNav";
+
+import { LayoutProvider } from "@/app/contexts/LayoutContext";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -24,19 +27,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className="dark">
+    <html lang="ru" className="dark bg-v-dark">
       <head>
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
+        <Script 
+          src="https://telegram.org/js/telegram-widget.js?22"
+          strategy="beforeInteractive"
+        />
       </head>
-      <body className={`${inter.className} bg-[#0A0A0A] text-white min-h-screen antialiased overflow-x-hidden`}>
-        <AuthProvider>
-          <main className="max-w-[430px] mx-auto min-h-screen relative pb-20">
-            {children}
-          </main>
-        </AuthProvider>
+      <body className={`${inter.className} bg-v-dark text-white antialiased`}>
+        <LayoutProvider>
+          <AuthProvider>
+              <main className="max-w-md mx-auto w-full relative pb-32">
+                {children}
+              </main>
+              <BottomNav />
+          </AuthProvider>
+        </LayoutProvider>
       </body>
     </html>
   );

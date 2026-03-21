@@ -33,7 +33,22 @@ export async function GET(req: NextRequest) {
     const user = await prisma.user.findUnique({
         where: { id: userPayload.sub as string },
         include: {
-            bookings: { include: { camp: true } },
+            bookings: { 
+                include: { camp: true },
+                orderBy: { createdAt: 'desc' }
+            },
+            payments: {
+                include: {
+                    booking: {
+                        include: {
+                            camp: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            },
             userCourses: { include: { course: true } },
             ensoLevel: true,
         }

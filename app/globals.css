@@ -4,27 +4,6 @@
 
 @layer base {
   :root {
-    --bg: #000000;
-    --card-from: #121213;
-    --card-to: #1A1B1E;
-    --text: #FFFFFF;
-    --muted: rgba(255, 255, 255, 0.8);
-    --line: rgba(255, 255, 255, 0.08);
-    --accent: #FF2D2D;
-    --accent-quiet: rgba(255, 45, 45, 0.85);
-    --success: #1DB954;
-    --warning: #FFC857;
-    --error: #FF5252;
-    --rank-green: #1ED760;
-    --rank-bronze: #8B5A2B;
-    --rank-white: #E8E8E8;
-    --rank-gold: #FFD54F;
-    --rank-enso: #FF2D2D;
-    --radius-lg: 22px;
-    --radius-md: 14px;
-    --shadow: 0 6px 28px rgba(0, 0, 0, 0.35);
-    --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.25);
-
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 240 5.9% 10%;
@@ -59,42 +38,3 @@
     user-select: none;
   }
 }
-
-.mono {
-  font-variant-numeric: tabular-nums;
-}
-
-/* Glass-lite cards */
-.glass-card {
-  background: linear-gradient(180deg, var(--card-from), var(--card-to));
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--line);
-}
-
-/* Tiles grid */
-.tiles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-
-.tile {
-  position: relative;
-  padding: 16px;
-  border-radius: 16px;
-  text-align: center;
-  background: linear-gradient(180deg, var(--card-from), var(--card-to));
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.2s ease;
-}
-
-.tile:active {
-  transform: scale(0.95);
-}
-
-/* Custom colors for tags/status */
-.ok { color: #6BE38C; }
-.accent { color: #FF2D2D; }
-.warn { color: #FFD166; }

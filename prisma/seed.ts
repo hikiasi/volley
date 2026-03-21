@@ -1,233 +1,179 @@
-import { PrismaClient, CampStatus, CourseCategory, CourseLevel, UserRole, ExerciseCategory, ExerciseDifficulty, CourseStatus } from '@prisma/client'
+import { PrismaClient, CampStatus, CourseCategory, CourseLevel, UserRole, PlayLevel, ExerciseCategory, ExerciseDifficulty, CourseStatus, BookingStatus, PaymentType, PaymentStatus as PaymentStatusEnum, DiscountType, ApplicableTo } from '@prisma/client'
+import { faker } from '@faker-js/faker/locale/ru';
 
 const prisma = new PrismaClient()
 
+const getRandomItem = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
 async function main() {
-  // 0. Clean up existing data
-  await prisma.courseDayExercise.deleteMany({});
-  await prisma.userExerciseProgress.deleteMany({});
-  await prisma.userDayProgress.deleteMany({});
-  await prisma.videoReview.deleteMany({});
-  await prisma.courseDay.deleteMany({});
-  await prisma.courseWeek.deleteMany({});
-  await prisma.userCourse.deleteMany({});
-  await prisma.course.deleteMany({});
-  await prisma.exercise.deleteMany({});
-  await prisma.campTrainer.deleteMany({});
-  await prisma.trainer.deleteMany({});
+  console.log("🔥 Start seeding...");
+
+  // Clean up existing data in order
+  console.log("🧹 Cleaning up old data...");
+  await prisma.chatMessage.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.promoCodeUsage.deleteMany({});
+  await prisma.payment.deleteMany({});
   await prisma.booking.deleteMany({});
-  await prisma.campDayOption.deleteMany({});
+  await prisma.waitlistEntry.deleteMany({});
+  await prisma.campTrainer.deleteMany({});
   await prisma.campDay.deleteMany({});
   await prisma.camp.deleteMany({});
+  await prisma.userCourse.deleteMany({});
+  await prisma.courseDayExercise.deleteMany({});
+  await prisma.courseDay.deleteMany({});
+  await prisma.courseWeek.deleteMany({});
+  await prisma.course.deleteMany({});
+  await prisma.exercise.deleteMany({});
+  await prisma.trainer.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.ensoLevel.deleteMany({});
+  await prisma.promoCode.deleteMany({});
+  console.log("✅ Old data cleaned up.");
 
   // 1. Enso Levels
-  const ensoLevels = [
-    { name: 'Shoshin', minPoints: 0, maxPoints: 1000, orderIndex: 1 },
-    { name: 'Shugyosha', minPoints: 1001, maxPoints: 3000, orderIndex: 2 },
-    { name: 'Jukuren', minPoints: 3001, maxPoints: 7000, orderIndex: 3 },
-    { name: 'Satori', minPoints: 7001, maxPoints: null, orderIndex: 4 },
+  const ensoLevelData = [
+    { id: "cl1", name: 'Shoshin', minPoints: 0, maxPoints: 1000, orderIndex: 1, description: "Начинающий" },
+    { id: "cl2", name: 'Shugyosha', minPoints: 1001, maxPoints: 3000, orderIndex: 2, description: "Практикующий" },
+    { id: "cl3", name: 'Jukuren', minPoints: 3001, maxPoints: 7000, orderIndex: 3, description: "Опытный" },
+    { id: "cl4", name: 'Satori', minPoints: 7001, maxPoints: null, orderIndex: 4, description: "Мастер" },
   ];
-
-  for (const level of ensoLevels) {
-    await prisma.ensoLevel.upsert({
-      where: { name: level.name },
-      update: level,
-      create: level,
-    });
-  }
+  await prisma.ensoLevel.createMany({ data: ensoLevelData });
+  console.log("🌱 Seeded Enso levels.");
 
   // 2. Trainers
-  const trainers = [
-    {
-      name: 'Алексей Волков',
-      bio: 'Главный тренер VOLLEYDZEN. 10 лет опыта в профессиональном волейболе.',
-      specialization: 'Прыжок и атака',
-    },
-    {
-      name: 'Дмитрий Соколов',
-      bio: 'Специалист по ОФП и скоростно-силовой подготовке.',
-      specialization: 'Скорость и выносливость',
-    },
-    {
-      name: 'Мария Кузнецова',
-      bio: 'Тренер по технике защиты и приема.',
-      specialization: 'Защита и прием',
-    }
+  const trainerData = [
+    { id: "tr1", name: 'Алексей Волков', bio: 'Главный тренер VOLLEYDZEN. 10 лет опыта в профессиональном волейболе.', specialization: 'Прыжок и атака', photoUrl: 'https://images.unsplash.com/photo-1574634534894-89d757d93249?auto=format&fit=crop&w=200&q=80' },
+    { id: "tr2", name: 'Дмитрий Соколов', bio: 'Специалист по ОФП и скоростно-силовой подготовке.', specialization: 'Скорость и выносливость', photoUrl: 'https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&w=200&q=80' },
+    { id: "tr3", name: 'Мария Кузнецова', bio: 'Тренер по технике защиты и приема.', specialization: 'Защита и прием', photoUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=200&q=80' },
   ];
-
-  const createdTrainers = [];
-  for (const t of trainers) {
-    const trainer = await prisma.trainer.create({ data: t });
-    createdTrainers.push(trainer);
-  }
-
-  // 3. Camps
-  const camps = [
-    {
-      slug: 'moscow-oct-2024',
-      title: 'Кэмп Москва · Октябрь',
-      city: 'Москва',
-      level: 'Shoshin',
-      startDate: new Date('2024-10-12'),
-      endDate: new Date('2024-10-14'),
-      durationDays: 3,
-      basePrice: 2990000, // 29,900 RUB
-      depositAmount: 500000, // 5,000 RUB
-      maxParticipants: 24,
-      currentParticipants: 17,
-      status: CampStatus.published,
-      hotMessage: '🔥 Парковка на территории бесплатная для участников',
-      whatsIncluded: ['3 дня интенсивных тренировок', 'Проживание в отеле 4*', 'Трехразовое питание', 'Спортивная страховка', 'Фирменная джерси'],
-      whatToBring: ['Волейбольная форма (3 комплекта)', 'Кроссовки для зала', 'Наколенники', 'Бутылка для воды'],
-      description: 'Интенсивный курс для начинающих игроков. Фокус на базовой технике перемещений, подаче и приеме.',
-      venueName: 'Спорткомплекс «Луч»',
-      address: 'Москва, ул. Лётчика Бабушкина, 23',
-      assemblyTime: new Date('1970-01-01T09:30:00Z'),
-      startTime: new Date('1970-01-01T10:00:00Z'),
-      organizerPhone: '+7 999 123 45 67',
-      organizerTelegram: '@volleydzen_admin',
-    },
-    {
-      slug: 'spb-nov-2024',
-      title: 'Кэмп Санкт-Петербург · Ноябрь',
-      city: 'Санкт-Петербург',
-      level: 'Shugyosha',
-      startDate: new Date('2024-11-15'),
-      endDate: new Date('2024-11-17'),
-      durationDays: 3,
-      basePrice: 3290000,
-      depositAmount: 700000,
-      maxParticipants: 20,
-      currentParticipants: 8,
-      status: CampStatus.published,
-      hotMessage: '📍 Центр города, 5 минут от метро',
-      whatsIncluded: ['Программа «Связующий + Атака»', 'Видео-анализ техники', 'Завтраки включены'],
-      whatToBring: ['Форма', 'Кроссовки', 'Хорошее настроение'],
-      description: 'Кэмп среднего уровня. Разбираем связки, тактику нападения и взаимодействия на блоке.',
-    }
-  ];
-
-  for (const cData of camps) {
-    const camp = await prisma.camp.upsert({
-      where: { slug: cData.slug },
-      update: cData as any,
-      create: cData as any,
+  await prisma.trainer.createMany({ data: trainerData });
+  const createdTrainers = await prisma.trainer.findMany();
+  console.log("🌱 Seeded trainers.");
+  
+  // 3. Users
+  const userData = [];
+  for (let i = 0; i < 15; i++) {
+    userData.push({
+      id: `user${i+1}`,
+      firstName: faker.person.firstName(),
+      lastName: faker.person.lastName(),
+      email: faker.internet.email(),
+      telegramId: faker.number.int({ min: 100000, max: 999999 }),
+      role: UserRole.user,
+      playLevel: getRandomItem(Object.values(PlayLevel)),
+      ensoLevelId: getRandomItem(ensoLevelData).id,
+      ensoPoints: faker.number.int({ min: 0, max: 8000 }),
+      photoUrl: `https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80&${i}`
     });
+  }
+  userData.push({ id: `user16`, firstName: 'Admin', lastName: 'User', email: 'admin@volleydzen.com', telegramId: 99999999, role: UserRole.admin, ensoLevelId: ensoLevelData[3].id });
+  userData.push({ id: `user17`, firstName: 'Trainer', lastName: 'User', email: 'trainer@volleydzen.com', telegramId: 88888888, role: UserRole.trainer, ensoLevelId: ensoLevelData[2].id });
+  
+  await prisma.user.createMany({ data: userData });
+  const createdUsers = await prisma.user.findMany();
+  console.log("🌱 Seeded users.");
 
-    // Link trainers to camps
-    await prisma.campTrainer.create({
+  // 4. Camps
+  const campData = [
+    { id: "camp1", slug: 'moscow-oct-2024', title: 'Кэмп Москва · Октябрь', city: 'Москва', level: 'Shoshin', startDate: new Date('2024-10-12'), endDate: new Date('2024-10-14'), durationDays: 3, basePrice: 2990000, maxParticipants: 24, currentParticipants: 17, status: CampStatus.published, coverImageUrl: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=800&q=80', description: 'Интенсивный курс для начинающих игроков.', whatsIncluded: ['Тренировки', 'Проживание', 'Питание'], whatToBring: ['Форма', 'Кроссовки'] },
+    { id: "camp2", slug: 'spb-nov-2024', title: 'Кэмп Санкт-Петербург · Ноябрь', city: 'Санкт-Петербург', level: 'Shugyosha', startDate: new Date('2024-11-15'), endDate: new Date('2024-11-17'), durationDays: 3, basePrice: 3290000, maxParticipants: 20, currentParticipants: 8, status: CampStatus.published, coverImageUrl: 'https://images.unsplash.com/photo-1551773487-95e7d5dc5343?auto=format&fit=crop&w=800&q=80', description: 'Кэмп среднего уровня.' , whatsIncluded: ['Тренировки', 'Видео-анализ'], whatToBring: ['Форма', 'Наколенники'] },
+    { id: "camp3", slug: 'sochi-dec-2024', title: 'Кэмп Сочи · Декабрь', city: 'Сочи', level: 'Jukuren', startDate: new Date('2024-12-20'), endDate: new Date('2024-12-22'), durationDays: 3, basePrice: 3490000, maxParticipants: 16, currentParticipants: 16, status: CampStatus.full, coverImageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=800&q=80', description: 'Продвинутый кэмп для опытных игроков.', whatsIncluded: ['Тренировки', 'Тактика', 'Психология'], whatToBring: ['Все необходимое'] },
+    { id: "camp4", slug: 'kazan-jan-2025', title: 'Кэмп Казань · Январь', city: 'Казань', level: 'Satori', startDate: new Date('2025-01-10'), endDate: new Date('2025-01-12'), durationDays: 3, basePrice: 3990000, maxParticipants: 12, currentParticipants: 5, status: CampStatus.published, coverImageUrl: 'https://images.unsplash.com/photo-1562886889-6d6f24c3a5d3?auto=format&fit=crop&w=800&q=80', description: 'Элитный кэмп для мастеров.', whatsIncluded: ['Все включено'], whatToBring: ['Только себя']}
+  ];
+  await prisma.camp.createMany({ data: campData });
+  const createdCamps = await prisma.camp.findMany();
+  console.log("🌱 Seeded camps.");
+
+  for (const camp of createdCamps) {
+    await prisma.campDay.createMany({
+        data: [ { campId: camp.id, dayNumber: 1, title: 'День 1: Техника', description: 'Отработка базовых элементов.'}, { campId: camp.id, dayNumber: 2, title: 'День 2: Тактика', description: 'Изучение игровых схем.'}, { campId: camp.id, dayNumber: 3, title: 'День 3: Игра', description: 'Игровые упражнения и матчи.'}, ]
+    });
+    await prisma.campTrainer.create({ data: { campId: camp.id, trainerId: getRandomItem(createdTrainers).id } });
+  }
+  console.log("🌱 Seeded camp days & trainers.");
+  
+  // 5. Courses and Exercises
+  const exerciseData = [
+    { id:'ex1', title: 'МФР голени', category: ExerciseCategory.warmup, difficulty: ExerciseDifficulty.easy, vimeoVideoId: '123456789' },
+    { id:'ex2', title: 'Динамическая растяжка', category: ExerciseCategory.warmup, difficulty: ExerciseDifficulty.easy, vimeoVideoId: '987654321' },
+    { id:'ex3', title: 'Приседания со штангой', category: ExerciseCategory.main, difficulty: ExerciseDifficulty.medium, vimeoVideoId: '111222333' },
+    { id:'ex4', title: 'Прыжки на тумбу 60см', category: ExerciseCategory.plyometric, difficulty: ExerciseDifficulty.hard, vimeoVideoId: '444555666' },
+  ];
+  await prisma.exercise.createMany({ data: exerciseData });
+
+  const courseData = [
+    { id: "course1", slug: 'jump-pro-6weeks', title: 'Прыжок PRO — 6 недель', category: CourseCategory.jump, level: CourseLevel.intermediate, durationWeeks: 6, price: 490000, trainerId: trainerData[0].id, coverImageUrl: 'https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=800&q=80' },
+    { id: "course2", slug: 'speed-100-8weeks', title: 'Скорость 100 — 8 недель', category: CourseCategory.speed, level: CourseLevel.advanced, durationWeeks: 8, price: 390000, trainerId: trainerData[1].id, coverImageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80' },
+  ];
+  await prisma.course.createMany({ data: courseData });
+  const createdCourses = await prisma.course.findMany();
+  console.log("🌱 Seeded courses & exercises.");
+
+  // 6. Relational Data
+  // Bookings & Payments
+  for (let i = 0; i < 5; i++) {
+    const user = createdUsers[i];
+    const camp = getRandomItem(createdCamps.filter(c => c.status === CampStatus.published));
+    const booking = await prisma.booking.create({
+        data: { userId: user.id, campId: camp.id, status: BookingStatus.fully_paid, paymentType: PaymentType.full, totalAmount: camp.basePrice, paidAmount: camp.basePrice, baseAmount: camp.basePrice }
+    });
+    await prisma.payment.create({ data: { bookingId: booking.id, userId: user.id, amount: camp.basePrice, status: PaymentStatusEnum.succeeded, yookassaPaymentId: faker.string.uuid() }});
+  }
+  console.log("🌱 Seeded bookings and payments.");
+
+  // User Courses
+  for (let i = 0; i < 3; i++) {
+    const user = createdUsers[i];
+    const course = getRandomItem(createdCourses);
+    await prisma.userCourse.create({ data: { userId: user.id, courseId: course.id, status: 'active', progress: faker.number.int({min: 10, max: 90}) }});
+  }
+  console.log("🌱 Seeded user courses.");
+
+  // Chat Messages
+  const campForChat = createdCamps[0];
+  for (let i = 0; i < 10; i++) {
+      const user = getRandomItem(createdUsers.filter(u => u.role === UserRole.user));
+      await prisma.chatMessage.create({
+          data: { campId: campForChat.id, userId: user.id, text: faker.lorem.sentence() }
+      });
+  }
+  console.log("🌱 Seeded chat messages.");
+
+  // Notifications
+  for (let i = 0; i < 5; i++) {
+      await prisma.notification.create({
+          data: { userId: createdUsers[i].id, title: "Добро пожаловать!", body: "Рады видеть вас в VOLLEYDZEN.", type: "welcome" }
+      });
+  }
+  console.log("🌱 Seeded notifications.");
+  
+  // Promo Codes
+  const adminUser = createdUsers.find(u => u.role === 'admin');
+  if (adminUser) {
+    await prisma.promoCode.create({
       data: {
-        campId: camp.id,
-        trainerId: createdTrainers[0].id
+        code: 'SALE20',
+        discountType: DiscountType.percentage,
+        discountValue: 20,
+        validFrom: new Date(),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        applicableTo: ApplicableTo.all,
+        createdByAdminId: adminUser.id,
       }
     });
   }
+  console.log("🌱 Seeded promo codes.");
 
-  // 4. Exercises Library
-  const exercises = [
-    { title: 'МФР голени', category: ExerciseCategory.warmup, difficulty: ExerciseDifficulty.easy, vimeoVideoId: '123456789' },
-    { title: 'Динамическая растяжка', category: ExerciseCategory.warmup, difficulty: ExerciseDifficulty.easy, vimeoVideoId: '987654321' },
-    { title: 'Приседания со штангой', category: ExerciseCategory.main, difficulty: ExerciseDifficulty.medium, vimeoVideoId: '111222333' },
-    { title: 'Прыжки на тумбу 60см', category: ExerciseCategory.plyometric, difficulty: ExerciseDifficulty.hard, vimeoVideoId: '444555666' },
-    { title: 'Заминка и МФР спины', category: ExerciseCategory.cooldown, difficulty: ExerciseDifficulty.easy, vimeoVideoId: '777888999' },
-    { title: 'Тест: CMJ (прыжок вверх)', category: ExerciseCategory.test, difficulty: ExerciseDifficulty.medium, vimeoVideoId: '000111222' },
-  ];
-
-  const createdExercises = [];
-  for (const ex of exercises) {
-    const createdEx = await prisma.exercise.create({ data: ex });
-    createdExercises.push(createdEx);
-  }
-
-  // 5. Courses
-  const courses = [
-    {
-      slug: 'jump-pro-6weeks',
-      title: 'Прыжок PRO — 6 недель',
-      category: CourseCategory.jump,
-      expectedResult: '+8-12 см к прыжку',
-      level: CourseLevel.intermediate,
-      durationWeeks: 6,
-      minutesPerDay: '30-45 мин/день',
-      price: 490000, // 4,900 RUB
-      installmentPrice: 150000,
-      status: CourseStatus.published,
-      isFeatured: true,
-      requirements: 'Без болей в коленях и спине. Наличие штанги или гантелей.',
-      suitableFor: ['Волейболистов любого уровня', 'Баскетболистов', 'Желающих увеличить взрывную силу'],
-      notSuitableFor: ['Людей с серьезными травмами суставов', 'В период реабилитации'],
-      trainerId: createdTrainers[0].id,
-    },
-    {
-      slug: 'speed-100-8weeks',
-      title: 'Скорость 100 — 8 недель',
-      category: CourseCategory.speed,
-      expectedResult: 'Ускорение реакции и рывка',
-      level: CourseLevel.advanced,
-      durationWeeks: 8,
-      minutesPerDay: '20-30 мин/день',
-      price: 390000,
-      status: CourseStatus.published,
-      trainerId: createdTrainers[1].id,
-    }
-  ];
-
-  for (const cData of courses) {
-    const course = await prisma.course.upsert({
-      where: { slug: cData.slug },
-      update: cData as any,
-      create: cData as any,
-    });
-
-    // Create Weeks and Days for Jump Pro
-    if (course.slug === 'jump-pro-6weeks') {
-      for (let w = 1; w <= 6; w++) {
-        const week = await prisma.courseWeek.create({
-          data: {
-            courseId: course.id,
-            weekNumber: w,
-            title: `Неделя ${w}: Фундамент силы`,
-            isFree: w === 1,
-          }
-        });
-
-        for (let d = 1; d <= 3; d++) {
-          const day = await prisma.courseDay.create({
-            data: {
-              weekId: week.id,
-              dayNumber: d,
-              title: `День ${d}: Взрывная тренировка`,
-              isFree: w === 1 && d === 1,
-            }
-          });
-
-          // Add Exercises to Day
-          for (let e = 0; e < createdExercises.length; e++) {
-             await prisma.courseDayExercise.create({
-               data: {
-                 courseDayId: day.id,
-                 exerciseId: createdExercises[e].id,
-                 section: createdExercises[e].category.toLowerCase(),
-                 orderIndex: e,
-                 sets: 3,
-                 reps: 10,
-                 restSecs: 60,
-               }
-             });
-          }
-        }
-      }
-    }
-  }
-
-  console.log('Seed completed successfully with realistic data.')
+  console.log("✅ Seed completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e)
+    console.error("❌ An error occurred during seeding:", e)
     process.exit(1)
   })
   .finally(async () => {
     await prisma.$disconnect()
   })
+

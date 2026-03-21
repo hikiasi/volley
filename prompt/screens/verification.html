@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Верификация контакта - VolleyDzen</title>
+<!-- Tailwind CSS CDN -->
+<script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sXzBiODdlMGYyNDI1YzRiMDE5NzBmY2Q1OGUwMTU3MDQxEgsSBxCM183J0AgYAZIBIwoKcHJvamVjdF9pZBIVQhMyNjk3MDUyNDk4MDUyNzgwMTEw%26filename%3D%26opi%3D89354086&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script><script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'app-dark': '#000000',
+            'app-dark-grey': '#121212',
+            'app-red': '#E1251B',
+            'app-red-muted': '#4B1212',
+            'app-green': '#1B4D2E',
+            'app-green-text': '#4ADE80',
+            'border-grey': '#333333',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styling">
+    body {
+      background-color: #000000;
+      color: #FFFFFF;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Custom scrollbar hiding for clean mobile look */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Verification Code Input Sizing */
+    .otp-input {
+      aspect-ratio: 1 / 1.3;
+      text-align: center;
+      font-size: 1.25rem;
+      background-color: transparent;
+      border: 1px solid #333333;
+      border-radius: 0.5rem;
+    }
+
+    .otp-input.active {
+      border-color: #E1251B;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+<!-- BEGIN: MainContent -->
+<main class="flex-grow flex flex-col px-6 pt-12 max-w-md mx-auto w-full" data-purpose="verification-screen">
+<!-- BEGIN: Header -->
+<header class="flex items-center mb-8" data-purpose="navigation-header">
+<button aria-label="Назад" class="p-2 -ml-2">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<h1 class="flex-grow text-center text-lg font-medium">Верификация контакта</h1>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Branding -->
+<div class="flex flex-col items-center mb-10" data-purpose="branding">
+<!-- Logo circle/arc -->
+<div class="mb-4">
+<svg class="text-app-red" height="60" viewbox="0 0 100 100" width="60">
+<circle cx="50" cy="50" fill="none" r="40" stroke="currentColor" stroke-dasharray="180 100" stroke-linecap="round" stroke-width="8" transform="rotate(-90 50 50)"></circle>
+</svg>
+</div>
+<div class="text-app-red font-bold text-2xl tracking-widest">VOLLEYDZEN</div>
+</div>
+<!-- END: Branding -->
+<!-- BEGIN: Tabs -->
+<div class="flex w-full rounded-lg bg-zinc-900 p-1 mb-8" data-purpose="auth-tabs">
+<button class="w-1/2 py-2 text-sm font-medium bg-zinc-800 rounded-md shadow-sm">Телефон</button>
+<button class="w-1/2 py-2 text-sm font-medium text-zinc-400">Email</button>
+</div>
+<!-- END: Tabs -->
+<!-- BEGIN: Success Message -->
+<div class="bg-app-green/30 border border-green-900/50 rounded-lg p-3 flex items-center mb-8" data-purpose="status-message">
+<div class="bg-green-500 rounded-full p-0.5 mr-3">
+<svg class="h-3 w-3 text-app-dark" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+</div>
+<span class="text-green-500 text-sm font-medium">Код подтверждён — успешно</span>
+</div>
+<!-- END: Success Message -->
+<!-- BEGIN: Verification Form -->
+<section class="space-y-6" data-purpose="otp-entry">
+<div class="space-y-2">
+<h2 class="text-lg font-semibold">1. Введите код из SMS</h2>
+<p class="text-zinc-400">+ 7 ....</p>
+</div>
+<!-- Code Input Grid -->
+<div class="grid grid-cols-6 gap-2" data-purpose="otp-grid">
+<input class="otp-input active" maxlength="1" type="text" value=""/>
+<input class="otp-input active border-app-red" maxlength="1" type="text" value=""/>
+<input class="otp-input" maxlength="1" type="text" value=""/>
+<input class="otp-input" maxlength="1" type="text" value=""/>
+<input class="otp-input" maxlength="1" type="text" value=""/>
+<input class="otp-input" maxlength="1" type="text" value=""/>
+</div>
+<!-- Info and Resend -->
+<div class="space-y-4">
+<p class="text-green-600 text-sm leading-tight">
+          Отправлено на SMS. Повторная отправка через 00:45
+        </p>
+<button class="w-full py-3 text-zinc-400 bg-zinc-900 rounded-xl text-sm font-medium border border-zinc-800">
+          Выслать код ещё раз
+        </button>
+<button class="w-full py-4 bg-app-red text-white rounded-xl text-lg font-bold shadow-lg active:scale-[0.98] transition-transform">
+          Подтвердить
+        </button>
+</div>
+<!-- Error Message -->
+<div class="bg-app-red-muted/40 border border-red-900/50 rounded-xl p-4 flex items-center" data-purpose="error-message">
+<div class="text-app-red mr-3">
+<svg class="h-5 w-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<span class="text-app-red text-sm font-medium">Неверный код. Осталось 2 попытки</span>
+</div>
+</section>
+<!-- END: Verification Form -->
+<!-- BEGIN: Footer Links -->
+<footer class="mt-auto py-8 space-y-4" data-purpose="footer-navigation">
+<div class="flex justify-between items-center text-zinc-300 text-sm">
+<a class="hover:underline" href="#">Использовать email</a>
+<a class="hover:underline" href="#">Связаться с поддержкой</a>
+</div>
+<div class="pt-4">
+<a class="text-zinc-500 text-sm hover:underline" href="#">Политика конфиденциальности</a>
+</div>
+<!-- iOS Home Indicator Placeholder -->
+<div class="flex justify-center pt-4">
+<div class="w-32 h-1.5 bg-zinc-200/20 rounded-full"></div>
+</div>
+</footer>
+<!-- END: Footer Links -->
+</main>
+<!-- END: MainContent -->
+<script data-purpose="otp-behavior">
+    // Simple logic to focus next input
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+  </script>
+</body></html>

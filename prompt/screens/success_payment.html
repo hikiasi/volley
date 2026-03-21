@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VOLLEYDZEN - Payment Success</title>
+<!-- Tailwind CSS CDN -->
+<script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2M5MmZmZDdmNmI2NDRjODM5NDI3ZjA1ZGMzOTVkZDUxEgsSBxCM183J0AgYAZIBIwoKcHJvamVjdF9pZBIVQhMyNjk3MDUyNDk4MDUyNzgwMTEw%26filename%3D%26opi%3D89354086&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script><script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts for better typography matching -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style data-purpose="typography">
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+<style data-purpose="custom-styling">
+    .bg-dark-obsidian {
+      background-color: #000000;
+    }
+    .bg-card-dark {
+      background-color: #121212;
+    }
+    .text-gray-muted {
+      color: #8E8E93;
+    }
+    .border-gray-stroke {
+      border-color: #2C2C2E;
+    }
+    .brand-red {
+      color: #E31E24;
+    }
+    .brand-bg-red {
+      background-color: #E31E24;
+    }
+    .brand-green {
+      color: #34C759;
+    }
+    .brand-bg-green {
+      background-color: #34C759;
+    }
+  </style>
+</head>
+<body class="bg-dark-obsidian text-white min-h-screen flex flex-col items-center">
+<div class="w-full max-w-md px-6 py-8 flex flex-col items-center">
+<!-- BEGIN: MainHeader -->
+<header class="flex flex-col items-center mb-8" data-purpose="app-branding">
+<!-- Logo Circle -->
+<div class="mb-4">
+<svg fill="none" height="80" viewbox="0 0 100 100" width="80" xmlns="http://www.w3.org/2000/svg">
+<path d="M50 10C27.9086 10 10 27.9086 10 50C10 72.0914 27.9086 90 50 90C72.0914 90 90 72.0914 90 50" stroke="#E31E24" stroke-linecap="round" stroke-width="8"></path>
+</svg>
+</div>
+<!-- Brand Name -->
+<h1 class="text-3xl font-bold tracking-widest brand-red">VOLLEYDZEN</h1>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: SuccessTitle -->
+<section class="flex flex-col items-center mb-8 text-center" data-purpose="success-status">
+<div class="flex items-center justify-center bg-green-500 rounded-full w-8 h-8 mb-4">
+<svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+</div>
+<h2 class="text-3xl font-semibold leading-tight">Оплата прошла успешно</h2>
+</section>
+<!-- END: SuccessTitle -->
+<!-- BEGIN: OrderDetailsCard -->
+<section class="w-full bg-card-dark rounded-3xl p-5 mb-6 border border-gray-stroke" data-purpose="order-summary">
+<div class="flex justify-between items-start mb-4">
+<div class="flex flex-col">
+<span class="text-lg font-medium">Москва · 12–14 окт <span class="text-gray-muted text-sm ml-1">3 дня</span></span>
+</div>
+<span class="text-lg font-medium">29 900 ₽</span>
+</div>
+<div class="flex justify-between items-center mb-1">
+<span class="text-gray-muted">Заказ #45691</span>
+<span class="text-gray-muted">Telegram Pay</span>
+</div>
+<div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-stroke/50">
+<span class="text-gray-muted">Оплачено</span>
+<span class="text-xl font-bold">29 900 ₽</span>
+</div>
+</section>
+<!-- END: OrderDetailsCard -->
+<!-- BEGIN: ActionButtonsGrid -->
+<section class="grid grid-cols-4 gap-3 w-full mb-8" data-purpose="quick-actions">
+<!-- Calendar -->
+<button class="flex flex-col items-center">
+<div class="w-14 h-14 bg-card-dark rounded-2xl border border-gray-stroke flex items-center justify-center mb-2">
+<svg class="h-6 w-6 brand-red" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-[10px] text-center text-gray-muted">В календарь<br/>в профиль</span>
+</button>
+<!-- Chat Active -->
+<button class="flex flex-col items-center">
+<div class="w-14 h-14 bg-card-dark rounded-2xl border border-gray-stroke flex items-center justify-center mb-2 relative">
+<div class="brand-bg-green rounded-full p-1 border-2 border-black">
+<svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+</svg>
+</div>
+</div>
+<span class="text-[10px] text-center brand-green">Чат<br/>участников</span>
+</button>
+<!-- Memo -->
+<button class="flex flex-col items-center">
+<div class="w-14 h-14 bg-card-dark rounded-2xl border border-gray-stroke flex items-center justify-center mb-2">
+<svg class="h-6 w-6 brand-red" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-[10px] text-center text-white">Памятка</span>
+</button>
+<!-- PDF Receipt -->
+<button class="flex flex-col items-center">
+<div class="w-14 h-14 bg-card-dark rounded-2xl border border-gray-stroke flex items-center justify-center mb-2">
+<svg class="h-6 w-6 brand-red" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-[10px] text-center text-white font-medium">Квитанция<br/>PDF</span>
+</button>
+</section>
+<!-- END: ActionButtonsGrid -->
+<!-- BEGIN: StatusList -->
+<section class="w-full bg-card-dark rounded-2xl p-4 mb-8 border border-gray-stroke" data-purpose="status-info">
+<div class="flex items-center gap-3 mb-3">
+<svg class="h-5 w-5 text-gray-muted" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" fill-rule="evenodd"></path>
+</svg>
+<span class="text-sm">Добавлен в профиль</span>
+</div>
+<div class="flex items-start gap-3">
+<svg class="h-5 w-5 text-gray-muted mt-0.5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+</svg>
+<div class="flex flex-col">
+<span class="text-sm">Письмо с чеком отправлено на email</span>
+<span class="text-sm text-gray-muted">example@com</span>
+</div>
+</div>
+</section>
+<!-- END: StatusList -->
+<!-- BEGIN: Checklist -->
+<section class="w-full mb-8" data-purpose="next-steps">
+<h3 class="text-lg font-semibold mb-4">Что дальше?</h3>
+<div class="space-y-4">
+<!-- Item 1 -->
+<label class="flex items-center gap-3 group cursor-pointer">
+<div class="w-6 h-6 border-2 border-gray-600 rounded flex items-center justify-center bg-transparent group-active:bg-gray-700 transition-colors"></div>
+<span class="text-base">Добавь в календарь</span>
+</label>
+<!-- Item 2 -->
+<label class="flex items-center gap-3 group cursor-pointer">
+<div class="w-6 h-6 border-2 border-gray-600 rounded flex items-center justify-center bg-transparent group-active:bg-gray-700 transition-colors"></div>
+<span class="text-base">Вступи в чат</span>
+</label>
+<!-- Item 3 -->
+<label class="flex items-center gap-3 group cursor-pointer">
+<div class="w-6 h-6 border-2 border-gray-600 rounded flex items-center justify-center bg-transparent group-active:bg-gray-700 transition-colors"></div>
+<span class="text-base">Памятка</span>
+</label>
+</div>
+</section>
+<!-- END: Checklist -->
+<!-- BEGIN: FooterAction -->
+<footer class="w-full mt-auto" data-purpose="primary-cta">
+<button class="w-full brand-bg-red text-white font-semibold py-4 rounded-2xl text-lg hover:opacity-90 transition-opacity">
+        Посмотреть программу кампа
+      </button>
+</footer>
+<!-- END: FooterAction -->
+</div>
+</body></html>

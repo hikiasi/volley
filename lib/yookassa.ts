@@ -1,25 +1,62 @@
 import crypto from "crypto";
+import type { User } from "@prisma/client";
 
 export async function createYookassaPayment(params: {
   amount: number; // in kopeks
   description: string;
   metadata: Record<string, string | number | boolean>;
-  returnUrl: string;
+  bookingId: string;
   paymentType: "full" | "deposit" | "installment";
+  user: Partial<User>; // User object for receipt
+  campTitle: string;
 }) {
+  const returnUrl = `${process.env.YOOKASSA_RETURN_URL || "https://volleydzen.ru/payment/success"}?booking_id=${params.bookingId}`;
+
   const body: {
     amount: { value: string; currency: string };
     confirmation: { type: string; return_url: string };
     description: string;
     metadata: Record<string, string | number | boolean>;
     capture: boolean;
+    receipt: {
+      customer: {
+        email?: string | null;
+        phone?: string | null;
+      };
+      items: {
+        description: string;
+        quantity: string;
+        amount: {
+          value: string;
+          currency: string;
+        };
+        vat_code: string;
+      }[];
+    };
     payment_method_data?: { type: string };
   } = {
     amount: { value: (params.amount / 100).toFixed(2), currency: "RUB" },
-    confirmation: { type: "redirect", return_url: params.returnUrl },
+    confirmation: { type: "redirect", return_url: returnUrl },
     description: params.description,
     metadata: params.metadata,
     capture: true,
+    receipt: {
+      customer: {
+        email: params.user.email,
+        phone: params.user.phone,
+      },
+      items: [
+        {
+          description: params.campTitle,
+          quantity: "1.00",
+          amount: {
+            value: (params.amount / 100).toFixed(2),
+            currency: "RUB",
+          },
+          vat_code: "1", // VAT code for "no VAT"
+        },
+      ],
+    },
   };
 
   if (params.paymentType === "installment") {
@@ -42,6 +79,25 @@ export async function createYookassaPayment(params: {
     const error = await response.json();
     console.error("Yookassa API Error:", error);
     throw new Error(`Yookassa API Error: ${error.description || error.message}`);
+  }
+
+  return response.json();
+}
+
+export async function getYookassaPaymentStatus(yookassaPaymentId: string) {
+  const response = await fetch(`https://api.yookassa.ru/v3/payments/${yookassaPaymentId}`, {
+    method: "GET",
+    headers: {
+      "Authorization": "Basic " + Buffer.from(
+        `${process.env.YOOKASSA_SHOP_ID}:${process.env.YOOKASSA_SECRET_KEY}`
+      ).toString("base64"),
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    console.error("Yookassa GetStatus API Error:", error);
+    throw new Error(`Yookassa GetStatus API Error: ${error.description || error.message}`);
   }
 
   return response.json();

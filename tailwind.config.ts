@@ -10,6 +10,11 @@ const config: Config = {
   theme: {
 	extend: {
 		colors: {
+            'v-dark': '#000000',
+            'v-card': '#0c0c0c',
+            'v-accent': '#ff2d1b',
+            'v-text-muted': '#a1a1a1',
+            'v-green': '#2ecc71',
 			background: 'hsl(var(--background))',
 			foreground: 'hsl(var(--foreground))',
 			card: {

@@ -2,14 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createYookassaPayment } from "@/lib/yookassa";
 import { getUserFromRequest } from "@/lib/auth";
+import { sendNotification } from "@/lib/notifications";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
   try {
-    const user = await getUserFromRequest(req);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const userPayload = await getUserFromRequest(req);
+    if (!userPayload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Fetch the full user object from DB to get email/phone for the receipt
+    const user = await prisma.user.findUnique({ where: { id: userPayload.sub as string }});
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const body = await req.json();
     const { paymentType, promoCodeId, selectedDayIds, pdpConsent, waiverConsent } = body as {
@@ -40,53 +45,72 @@ export async function POST(
       }
     }
 
-    // Check occupancy and create booking transactionally
+    // Use a transaction to ensure data consistency
     const booking = await prisma.$transaction(async (tx) => {
-      // Find existing pre-booking to avoid double counting if they already pre-booked
-      const existing = await tx.booking.findFirst({
-        where: { userId: user.sub as string, campId: camp.id, status: "pre_booked" }
+      // 1. Check for any existing active booking for this user and camp
+      const existingBooking = await tx.booking.findFirst({
+        where: {
+          userId: user.id,
+          campId: camp.id,
+          status: { in: ['deposit_paid', 'fully_paid', 'pre_booked'] }
+        }
       });
 
-      if (!existing) {
+      if (existingBooking && existingBooking.status !== 'pre_booked') {
+        throw new Error("У вас уже есть подтвержденная бронь на этот кэмп.");
+      }
+      
+      let finalBooking = existingBooking;
+
+      // 2. If no booking exists, create a new one and increment participant count
+      if (!existingBooking) {
         const updatedCamp = await tx.camp.update({
           where: { id: camp.id },
           data: { currentParticipants: { increment: 1 } }
         });
 
         if (updatedCamp.currentParticipants > updatedCamp.maxParticipants) {
-          throw new Error("Camp is full");
+          throw new Error("К сожалению, места в кэмпе закончились.");
         }
+
+        finalBooking = await tx.booking.create({
+          data: {
+            userId: user.id,
+            campId: camp.id,
+            status: "pre_booked",
+            paymentType,
+            baseAmount: camp.basePrice,
+            totalAmount: Math.round(totalAmount),
+            selectedDayIds: selectedDayIds || [],
+            preBookedAt: new Date(),
+            preBookExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24h
+            pdpConsent,
+            waiverConsent,
+          },
+        });
       }
 
-      return await tx.booking.create({
-        data: {
-          userId: user.sub as string,
-          campId: camp.id,
-          status: "pre_booked",
-          paymentType,
-          baseAmount: camp.basePrice,
-          totalAmount: Math.round(totalAmount),
-          selectedDayIds: selectedDayIds || [],
-          preBookedAt: new Date(),
-          preBookExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          pdpConsent,
-          waiverConsent,
-        },
-      });
+      if (!finalBooking) {
+        throw new Error("Не удалось создать или найти бронирование.");
+      }
+      
+      return finalBooking;
     });
 
     const payment = await createYookassaPayment({
       amount: booking.totalAmount,
       description: `Оплата кэмпа ${camp.title} (${camp.city})`,
-      metadata: { booking_id: booking.id, user_id: user.sub as string },
-      returnUrl: `${process.env.YOOKASSA_RETURN_URL || "https://volleydzen.ru/payment/success"}`,
+      metadata: { booking_id: booking.id, user_id: user.id },
+      bookingId: booking.id,
       paymentType,
+      user: user,
+      campTitle: camp.title,
     });
 
     await prisma.payment.create({
       data: {
         bookingId: booking.id,
-        userId: user.sub as string,
+        userId: user.id,
         yookassaPaymentId: payment.id,
         amount: booking.totalAmount,
         currency: "RUB",
@@ -95,9 +119,16 @@ export async function POST(
       },
     });
 
+    // Send notification to user
+    await sendNotification(
+      user,
+      `Счет на оплату кэмпа ${camp.title}`,
+      `🧾 Создан счет для оплаты кэмпа <b>${camp.title}</b>. Завершите оплату, чтобы подтвердить бронирование.`
+    );
+
     return NextResponse.json({
       bookingId: booking.id,
-      paymentUrl: payment.confirmation.confirmation_url,
+      confirmationUrl: payment.confirmation.confirmation_url,
     });
   } catch (error: unknown) {
     console.error("Booking Error:", error);

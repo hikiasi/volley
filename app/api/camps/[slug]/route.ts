@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { getCampBySlug } from "@/lib/camps";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
   try {
-    const camp = await prisma.camp.findUnique({
-      where: { slug: params.slug },
-      include: {
-        trainers: { include: { trainer: true } },
-        days: { include: { options: true } },
-      },
-    });
+    const camp = await getCampBySlug(params.slug);
 
     if (!camp) {
       return NextResponse.json({ error: "Camp not found" }, { status: 404 });
@@ -20,7 +14,11 @@ export async function GET(
 
     return NextResponse.json(camp);
   } catch (error: unknown) {
+    console.error(`Error fetching camp ${params.slug}:`, error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch camp details" },
+      { status: 500 }
+    );
   }
 }

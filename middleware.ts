@@ -8,9 +8,6 @@ export async function middleware(request: NextRequest) {
 
   // 1. Allow auth pages, public assets, and API auth routes
   if (
-    pathname === '/' ||
-    pathname.startsWith('/camps') ||
-    pathname.startsWith('/api/camps') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/_next') ||

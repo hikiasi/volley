@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VOLLEYDZEN Dashboard</title>
+<!-- BEGIN: External Scripts -->
+<script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgthaWRhX2NvZGVmeBJ7Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpaCiVodG1sX2ZhMDhmN2NmNzk4NDQ4YjE4YzM2NDM0MmI4MTcwYmZhEgsSBxCM183J0AgYAZIBIwoKcHJvamVjdF9pZBIVQhMyNjk3MDUyNDk4MDUyNzgwMTEw%26filename%3D%26opi%3D89354086&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script><script type="text/javascript" nonce="22297df0dd674f7da227295ae55" src="//local.adguard.org?ts=1773359254629&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- END: External Scripts -->
+<!-- BEGIN: Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'v-dark': '#000000',
+            'v-card': '#0c0c0c',
+            'v-accent': '#ff2d1b',
+            'v-text-muted': '#a1a1a1',
+            'v-green': '#2ecc71'
+          }
+        }
+      }
+    }
+  </script>
+<!-- END: Tailwind Configuration -->
+<style data-purpose="layout-refinements">
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .grid-card {
+      aspect-ratio: 1 / 1;
+    }
+    .badge-top-right {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+    .progress-bar-bg {
+      background: #1a1a1a;
+      height: 4px;
+      width: 100%;
+      border-radius: 2px;
+    }
+    .progress-bar-fill {
+      background: #2ecc71;
+      height: 4px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="p-4 flex flex-col items-center min-h-screen">
+<!-- BEGIN: Header Section -->
+<header class="w-full flex flex-col items-center mt-4 mb-8" data-purpose="app-header">
+<div class="mb-2">
+<!-- Logo: Enso Circle -->
+<svg fill="none" height="60" viewbox="0 0 100 100" width="60" xmlns="http://www.w3.org/2000/svg">
+<path d="M50 10C35 10 21 18 14 31C7 44 7 59 14 72C21 85 35 93 50 93C62 93 74 88 82 79" stroke="#ff2d1b" stroke-linecap="round" stroke-width="8"></path>
+<path d="M88 40C89 47 88 54 86 61" stroke="#ff2d1b" stroke-linecap="round" stroke-width="8"></path>
+</svg>
+</div>
+<h1 class="text-4xl font-black tracking-widest text-v-accent uppercase">VOLLEYDZEN</h1>
+<p class="text-sm font-light tracking-tight mt-1">ты решаешь как играть и жить</p>
+</header>
+<!-- END: Header Section -->
+<!-- BEGIN: Community Info Box -->
+<section class="w-full max-w-sm mb-6" data-purpose="community-stats">
+<div class="bg-v-card rounded-2xl p-4 border border-zinc-800">
+<div class="flex items-center gap-3 mb-1">
+<div class="w-10 h-10 bg-v-green/10 flex items-center justify-center rounded-lg">
+<svg class="w-6 h-6 text-v-green" fill="currentColor" viewbox="0 0 24 24">
+<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path>
+</svg>
+</div>
+<div>
+<h2 class="text-lg font-medium">Сообщество: <span class="font-bold">12 540</span> участников</h2>
+</div>
+</div>
+<div class="flex items-center gap-2 mt-2">
+<span class="w-2 h-2 rounded-full bg-v-accent"></span>
+<p class="text-xs text-v-text-muted">HOT – Скидка -10% на «Power Jump»</p>
+</div>
+</div>
+</section>
+<!-- END: Community Info Box -->
+<!-- BEGIN: Grid Menu -->
+<main class="w-full max-w-sm grid grid-cols-3 gap-3 mb-8" data-purpose="main-navigation-grid">
+<!-- Row 1 -->
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<line x1="12" x2="12" y1="16" y2="12"></line>
+<line x1="12" x2="12.01" y1="8" y2="8"></line>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Манифест<br/>VOLLEYDZENA</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<div class="relative">
+<svg class="w-10 h-10 text-v-accent" fill="currentColor" viewbox="0 0 24 24">
+<path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"></path>
+</svg>
+<span class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[20%] text-[10px] font-black text-v-dark">3</span>
+</div>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Календарь<br/>Кэмпов</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="none" stroke="currentColor" stroke-width="8" viewbox="0 0 100 100">
+<path d="M50 15C31 15 15 31 15 50C15 69 31 85 50 85C65 85 78 76 83 65"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">VOLLEYDZEN:<br/>Путь Энсо</span>
+</div>
+<!-- Row 2 -->
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="currentColor" viewbox="0 0 24 24">
+<path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"></path>
+<path d="M4 20h16" stroke="currentColor" stroke-width="1"></path>
+<path d="M19 8l-4 4-3-3-4 4" fill="none" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Атлетизм</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="currentColor" viewbox="0 0 24 24">
+<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-11 9H7V9h2v2zm4 0h-2V9h2v2zm4 0h-2V9h2v2z"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Консультации</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<circle cx="12" cy="12" r="10"></circle>
+<path d="M12 2C12 2 15 12 12 22"></path>
+<path d="M2 12C2 12 12 9 22 12"></path>
+<path d="M7 3L17 21"></path>
+<path d="M17 3L7 21"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Офлайн<br/>тренировки</span>
+</div>
+<!-- Row 3 -->
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900 relative">
+<div class="badge-top-right bg-[#2e3d2e] text-[#2ecc71] text-[10px] font-bold px-1.5 rounded-full">2</div>
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="currentColor" viewbox="0 0 24 24">
+<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Новости и<br/>рассылки</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900 relative">
+<div class="badge-top-right bg-[#2e3d2e] text-[#2ecc71] text-[8px] font-bold px-1.5 rounded-full">NEW</div>
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="currentColor" viewbox="0 0 24 24">
+<path d="M7 4h10v3h-3v2h5v11H5V9h5V7H7V4z"></path>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Мерч</span>
+</div>
+<div class="grid-card bg-v-card rounded-2xl p-3 flex flex-col items-center justify-center text-center border border-zinc-900">
+<div class="w-12 h-12 flex items-center justify-center mb-2">
+<svg class="w-10 h-10 text-v-accent" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+<circle cx="12" cy="7" r="4"></circle>
+</svg>
+</div>
+<span class="text-[10px] uppercase font-bold leading-tight">Профиль</span>
+</div>
+</main>
+<!-- END: Grid Menu -->
+<!-- BEGIN: Bottom Status Bar -->
+<footer class="w-full max-w-sm" data-purpose="camp-status-bar">
+<div class="bg-v-card/50 rounded-2xl p-4 border border-zinc-900">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-3">
+<div class="w-6 h-6 rounded-full border-2 border-v-accent flex items-center justify-center">
+<div class="w-4 h-4 rounded-full border border-v-accent"></div>
+</div>
+<div class="flex flex-col">
+<h3 class="text-xs font-medium text-white">Ближайший кэмп — Москва • 12–14 окт</h3>
+<span class="text-[10px] text-v-text-muted">заполнено 72%</span>
+</div>
+</div>
+<button class="bg-[#1a2e24] text-v-green text-xs font-bold py-2 px-4 rounded-xl">
+          Предбронь
+        </button>
+</div>
+<div class="progress-bar-bg">
+<div class="progress-bar-fill" style="width: 72%;"></div>
+</div>
+</div>
+</footer>
+<!-- END: Bottom Status Bar -->
+</body></html>
