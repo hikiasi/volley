@@ -43,7 +43,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="receipt-${payment.booking.id}.pdf"`,
+        'Content-Disposition': `inline; filename="receipt-${payment.booking.id}.pdf"`,
       },
     });
 

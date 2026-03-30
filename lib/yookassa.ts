@@ -11,6 +11,9 @@ export async function createYookassaPayment(params: {
   campTitle: string;
 }) {
   const returnUrl = `${process.env.YOOKASSA_RETURN_URL || "https://volleydzen.ru/payment/success"}?booking_id=${params.bookingId}`;
+  
+  // Clean phone number for YooKassa API (they expect digits only)
+  const cleanPhone = params.user.phone ? params.user.phone.replace(/\D/g, '') : null;
 
   const body: {
     amount: { value: string; currency: string };
@@ -43,7 +46,7 @@ export async function createYookassaPayment(params: {
     receipt: {
       customer: {
         email: params.user.email,
-        phone: params.user.phone,
+        phone: cleanPhone,
       },
       items: [
         {

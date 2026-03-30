@@ -20,11 +20,13 @@ export default async function CampLocationPage({ params }: { params: { slug: str
   return (
     <main className="w-full max-w-md mx-auto min-h-screen flex flex-col px-4 pb-10 bg-v-dark text-white">
       <header className="flex items-center justify-between py-4">
-        <Link href={`/camps/${camp.slug}`} className="p-2 -ml-2">
+        <Link href={`/camps/${camp.slug}`} className="p-2 -ml-2 text-v-text-muted">
           <ChevronLeft className="h-6 w-6" />
         </Link>
         <h1 className="text-lg font-semibold">Адрес и карта</h1>
-        <div className="w-8 h-8" />
+        <div className="w-8 h-8 text-v-text-muted">
+            <MoreVertical className="h-6 w-6" />
+        </div>
       </header>
 
       <section className="mt-2">
@@ -51,15 +53,23 @@ export default async function CampLocationPage({ params }: { params: { slug: str
 
       {checklist.length > 0 && (
         <section className="mt-4 bg-v-card rounded-2xl p-4 border border-zinc-800">
-            <h3 className="text-lg font-bold mb-3">Что взять</h3>
-            <div className="space-y-3">
-              {checklist.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 text-white/80">
-                      <div className="w-5 h-5 flex items-center justify-center rounded-md bg-v-green"><Check className="w-3 h-3 text-black" /></div>
-                      <span>{item}</span>
-                  </div>
-              ))}
-            </div>
+          <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <h3 className="text-lg font-bold mb-3">Что взять</h3>
+                {checklist.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 text-white/80">
+                        <div className="w-5 h-5 flex items-center justify-center rounded-md bg-v-green"><Check className="w-3 h-3 text-black" strokeWidth={3}/></div>
+                        <span>{item}</span>
+                    </div>
+                ))}
+              </div>
+              <div className="text-right flex flex-col items-end">
+                <div className="space-y-1">
+                    <p className="text-[16px]"><span className="text-v-text-muted">Сбор</span> {camp.assemblyTime}</p>
+                    <p className="text-[16px] font-medium"><span className="text-v-text-muted">Начало</span> {camp.startTime}</p>
+                </div>
+              </div>
+          </div>
         </section>
       )}
       
@@ -82,7 +92,7 @@ export default async function CampLocationPage({ params }: { params: { slug: str
 
       {camp.hotMessage && (
         <footer className="mt-6 flex items-center gap-2">
-            <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs font-bold text-black">!</div>
+            <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-xs font-bold text-black"><AlertTriangle className="w-3 h-3"/></div>
             <p className="text-orange-500 font-medium">{camp.hotMessage}</p>
         </footer>
       )}

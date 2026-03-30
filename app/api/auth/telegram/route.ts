@@ -39,11 +39,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Re-fetch the user to ensure we have the latest data, including the correct role
+    const fullUser = await prisma.user.findUniqueOrThrow({
+      where: { id: user.id },
+    });
+
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const token = await new SignJWT({
-        sub: user.id,
-        telegramId: user.telegramId?.toString(),
-        role: user.role
+        sub: fullUser.id,
+        telegramId: fullUser.telegramId?.toString(),
+        role: fullUser.role
       })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
@@ -51,8 +56,8 @@ export async function POST(req: NextRequest) {
       .sign(secret);
 
     const safeUser = {
-      ...user,
-      telegramId: user.telegramId?.toString(),
+      ...fullUser,
+      telegramId: fullUser.telegramId?.toString(),
     };
 
     const response = NextResponse.json({ token, user: safeUser });

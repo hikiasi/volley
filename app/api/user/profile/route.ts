@@ -8,14 +8,17 @@ export async function PATCH(req: NextRequest) {
     if (!userPayload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { phone, email, playLevel } = body;
+    const { firstName, lastName, phone, email, playLevel, photoUrl } = body;
 
     const updatedUser = await prisma.user.update({
       where: { id: userPayload.sub as string },
       data: {
+        firstName,
+        lastName,
         phone,
         email,
         playLevel,
+        photoUrl,
       },
     });
 

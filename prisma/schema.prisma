@@ -28,51 +28,51 @@ enum PlayLevel {
 }
 
 model User {
-  id                    String    @id @default(uuid())
-  telegramId            BigInt?   @unique @map("telegram_id")
-  role                  UserRole  @default(user)
+  id         String   @id @default(uuid())
+  telegramId BigInt?  @unique @map("telegram_id")
+  role       UserRole @default(user)
 
   // Данные из Telegram
-  firstName             String    @map("first_name") @db.VarChar(100)
-  lastName              String?   @map("last_name") @db.VarChar(100)
-  username              String?   @unique @db.VarChar(100)
-  photoUrl              String?   @map("photo_url") @db.Text
+  firstName String  @map("first_name") @db.VarChar(100)
+  lastName  String? @map("last_name") @db.VarChar(100)
+  username  String? @unique @db.VarChar(100)
+  photoUrl  String? @map("photo_url") @db.Text
 
   // Обязательные для оплаты
-  phone                 String?   @db.VarChar(20)
-  email                 String?   @db.VarChar(255)
-  password              String?   @db.Text
+  phone    String? @db.VarChar(20)
+  email    String? @db.VarChar(255)
+  password String? @db.Text
 
   // Профиль игрока
-  playLevel             PlayLevel? @map("play_level")
-  ensoLevelId           String?   @map("enso_level_id")
-  ensoPoints            Int       @default(0) @map("enso_points")
+  playLevel   PlayLevel? @map("play_level")
+  ensoLevelId String?    @map("enso_level_id")
+  ensoPoints  Int        @default(0) @map("enso_points")
 
   // Настройки
-  notificationsEnabled  Boolean   @default(true) @map("notifications_enabled")
-  isBlocked             Boolean   @default(false) @map("is_blocked")
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+  isBlocked            Boolean @default(false) @map("is_blocked")
 
   // Даты
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
-  lastActiveAt          DateTime? @map("last_active_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastActiveAt DateTime? @map("last_active_at")
 
   // Связи
-  ensoLevel             EnsoLevel?           @relation(fields: [ensoLevelId], references: [id])
-  bookings              Booking[]
-  userCourses           UserCourse[]
-  payments              Payment[]
-  testResults           TestResult[]
-  videoReviews          VideoReview[]        @relation("StudentReviews")
-  trainerReviews        VideoReview[]        @relation("TrainerReviews")
-  notifications         Notification[]
-  achievements          UserAchievement[]
-  promoCodeUsages       PromoCodeUsage[]
-  adminInvitesSent      AdminInvite[]        @relation("InvitedBy")
-  auditLogs             AuditLog[]
-  waitlistEntries       WaitlistEntry[]
-  verificationCodes     VerificationCode[]
-  chatMessages          ChatMessage[]
+  ensoLevel         EnsoLevel?         @relation(fields: [ensoLevelId], references: [id])
+  bookings          Booking[]
+  userCourses       UserCourse[]
+  payments          Payment[]
+  testResults       TestResult[]
+  videoReviews      VideoReview[]      @relation("StudentReviews")
+  trainerReviews    VideoReview[]      @relation("TrainerReviews")
+  notifications     Notification[]
+  achievements      UserAchievement[]
+  promoCodeUsages   PromoCodeUsage[]
+  adminInvitesSent  AdminInvite[]      @relation("InvitedBy")
+  auditLogs         AuditLog[]
+  waitlistEntries   WaitlistEntry[]
+  verificationCodes VerificationCode[]
+  chatMessages      ChatMessage[]
 
   @@index([role])
   @@index([username])
@@ -81,16 +81,16 @@ model User {
 }
 
 model AdminInvite {
-  id              String    @id @default(uuid())
-  invitedByUserId String    @map("invited_by_user_id")
-  telegramId      BigInt?   @map("telegram_id")
+  id              String   @id @default(uuid())
+  invitedByUserId String   @map("invited_by_user_id")
+  telegramId      BigInt?  @map("telegram_id")
   role            UserRole
-  token           String    @unique @db.VarChar(64)
-  used            Boolean   @default(false)
-  expiresAt       DateTime  @map("expires_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  token           String   @unique @db.VarChar(64)
+  used            Boolean  @default(false)
+  expiresAt       DateTime @map("expires_at")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  invitedBy       User      @relation("InvitedBy", fields: [invitedByUserId], references: [id])
+  invitedBy User @relation("InvitedBy", fields: [invitedByUserId], references: [id])
 
   @@map("admin_invites")
 }
@@ -108,72 +108,75 @@ enum CampStatus {
 }
 
 model Camp {
-  id                   String      @id @default(uuid())
-  slug                 String      @unique @db.VarChar(255)
-  title                String      @db.VarChar(255)
-  description          String?     @db.Text
-  level                String      @db.VarChar(50) // Shoshin / Shugyosha / Jukuren / Satori
+  id          String  @id @default(uuid())
+  slug        String  @unique @db.VarChar(255)
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+  level       String  @db.VarChar(50) // Shoshin / Shugyosha / Jukuren / Satori
 
   // Локация
-  city                 String      @db.VarChar(100)
-  venueName            String?     @map("venue_name") @db.VarChar(255)
-  address              String?     @db.Text
-  lat                  Decimal?    @db.Decimal(10, 8)
-  lng                  Decimal?    @db.Decimal(11, 8)
-  yandexMapsUrl        String?     @map("yandex_maps_url") @db.Text
+  city          String   @db.VarChar(100)
+  venueName     String?  @map("venue_name") @db.VarChar(255)
+  address       String?  @db.Text
+  lat           Decimal? @db.Decimal(10, 8)
+  lng           Decimal? @db.Decimal(11, 8)
+  yandexMapsUrl String?  @map("yandex_maps_url") @db.Text
 
   // Даты
-  startDate            DateTime    @map("start_date") @db.Date
-  endDate              DateTime    @map("end_date") @db.Date
-  durationDays         Int         @map("duration_days")
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime @map("end_date") @db.Date
+  durationDays Int      @map("duration_days")
 
   // Цены
-  basePrice            Int         @map("base_price") // копейки
-  depositAmount        Int?        @map("deposit_amount")
+  basePrice       Int       @map("base_price") // копейки
+  earlyBirdPrice  Int?      @map("early_bird_price")
+  earlyBirdCutoff DateTime? @map("early_bird_cutoff")
+  depositAmount   Int?      @map("deposit_amount")
 
   // Участники
-  maxParticipants      Int         @map("max_participants")
-  currentParticipants  Int         @default(0) @map("current_participants")
+  maxParticipants     Int @map("max_participants")
+  currentParticipants Int @default(0) @map("current_participants")
 
   // Статус
-  status               CampStatus  @default(draft)
+  status CampStatus @default(draft)
 
   // Медиа
-  coverImageUrl        String?     @map("cover_image_url") @db.Text
-  gallery              Json?       // ["url1", "url2"]
+  coverImageUrl String? @map("cover_image_url") @db.Text
+  gallery       Json? // ["url1", "url2"]
 
   // Расписание
-  assemblyTime         DateTime?   @map("assembly_time") @db.Time
-  startTime            DateTime?   @map("start_time") @db.Time
+  assemblyTime DateTime? @map("assembly_time") @db.Time
+  startTime    DateTime? @map("start_time") @db.Time
 
   // Информация
-  whatToBring          Json?       @map("what_to_bring") // [{"item":"Вода"}]
-  whatsIncluded        Json?       @map("whats_included")
-  hotMessage           String?     @map("hot_message") @db.VarChar(500)
-  parkingInfo          String?     @map("parking_info") @db.Text
+  whatToBring    Json?   @map("what_to_bring") // [{"item":"Вода"}]
+  whatsIncluded  Json?   @map("whats_included")
+  customSections Json?   @map("custom_sections") // [{"title":"My Section","content":"..."}]
+  hotMessage     String? @map("hot_message") @db.VarChar(500)
+  parkingInfo    String? @map("parking_info") @db.Text
 
   // Рейтинг
-  rating               Decimal?    @db.Decimal(3, 2)
-  reviewsCount         Int         @default(0) @map("reviews_count")
+  rating       Decimal? @db.Decimal(3, 2)
+  reviewsCount Int      @default(0) @map("reviews_count")
 
   // Контакты
-  organizerPhone       String?     @map("organizer_phone") @db.VarChar(20)
-  organizerTelegram    String?     @map("organizer_telegram") @db.VarChar(100)
+  organizerPhone    String? @map("organizer_phone") @db.VarChar(20)
+  organizerTelegram String? @map("organizer_telegram") @db.VarChar(100)
 
   // Файлы
-  icsFileUrl           String?     @map("ics_file_url") @db.Text
-  participantsChatUrl  String?     @map("participants_chat_url") @db.Text
-  memoUrl              String?     @map("memo_url") @db.Text
+  icsFileUrl          String? @map("ics_file_url") @db.Text
+  participantsChatUrl String? @map("participants_chat_url") @db.Text
+  memoUrl             String? @map("memo_url") @db.Text
 
-  createdAt            DateTime    @default(now()) @map("created_at")
-  updatedAt            DateTime    @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Связи
-  days                 CampDay[]
-  trainers             CampTrainer[]
-  bookings             Booking[]
-  waitlistEntries      WaitlistEntry[]
-  chatMessages         ChatMessage[]
+  days            CampDay[]
+  trainers        CampTrainer[]
+  bookings        Booking[]
+  waitlistEntries WaitlistEntry[]
+  chatMessages    ChatMessage[]
 
   @@index([status])
   @@index([startDate])
@@ -190,8 +193,8 @@ model CampDay {
   isOptional  Boolean @default(false) @map("is_optional")
   extraPrice  Int     @default(0) @map("extra_price") // копейки
 
-  camp        Camp    @relation(fields: [campId], references: [id], onDelete: Cascade)
-  options     CampDayOption[]
+  camp    Camp            @relation(fields: [campId], references: [id], onDelete: Cascade)
+  options CampDayOption[]
 
   @@unique([campId, dayNumber])
   @@map("camp_days")
@@ -202,24 +205,24 @@ model CampDayOption {
   campDayId   String  @map("camp_day_id")
   title       String  @db.VarChar(255)
   description String? @db.Text
-  price       Int     // копейки
+  price       Int // копейки
 
-  campDay     CampDay @relation(fields: [campDayId], references: [id], onDelete: Cascade)
+  campDay CampDay @relation(fields: [campDayId], references: [id], onDelete: Cascade)
 
   @@map("camp_day_options")
 }
 
 model Trainer {
-  id              String   @id @default(uuid())
-  name            String   @db.VarChar(255)
-  bio             String?  @db.Text
-  photoUrl        String?  @map("photo_url") @db.Text
-  specialization  String?  @db.VarChar(255)
-  instagramUrl    String?  @map("instagram_url") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
+  id             String   @id @default(uuid())
+  name           String   @db.VarChar(255)
+  bio            String?  @db.Text
+  photoUrl       String?  @map("photo_url") @db.Text
+  specialization String?  @db.VarChar(255)
+  instagramUrl   String?  @map("instagram_url") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  camps           CampTrainer[]
-  courses         Course[]
+  camps   CampTrainer[]
+  courses Course[]
 
   @@map("trainers")
 }
@@ -229,8 +232,8 @@ model CampTrainer {
   campId    String @map("camp_id")
   trainerId String @map("trainer_id")
 
-  camp      Camp   @relation(fields: [campId], references: [id], onDelete: Cascade)
-  trainer   Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  camp    Camp    @relation(fields: [campId], references: [id], onDelete: Cascade)
+  trainer Trainer @relation(fields: [trainerId], references: [id], onDelete: Cascade)
 
   @@unique([campId, trainerId])
   @@map("camp_trainers")
@@ -255,42 +258,42 @@ enum PaymentType {
 }
 
 model Booking {
-  id                String        @id @default(uuid())
-  userId            String        @map("user_id")
-  campId            String        @map("camp_id")
-  status            BookingStatus @default(pre_booked)
-  paymentType       PaymentType   @map("payment_type")
+  id          String        @id @default(uuid())
+  userId      String        @map("user_id")
+  campId      String        @map("camp_id")
+  status      BookingStatus @default(pre_booked)
+  paymentType PaymentType   @map("payment_type")
 
   // Суммы (копейки)
-  baseAmount        Int           @map("base_amount")
-  optionsAmount     Int           @default(0) @map("options_amount")
-  discountAmount    Int           @default(0) @map("discount_amount")
-  totalAmount       Int           @map("total_amount")
-  paidAmount        Int           @default(0) @map("paid_amount")
-  remainingAmount   Int           @default(0) @map("remaining_amount")
+  baseAmount      Int @map("base_amount")
+  optionsAmount   Int @default(0) @map("options_amount")
+  discountAmount  Int @default(0) @map("discount_amount")
+  totalAmount     Int @map("total_amount")
+  paidAmount      Int @default(0) @map("paid_amount")
+  remainingAmount Int @default(0) @map("remaining_amount")
 
-  promoCodeId       String?       @map("promo_code_id")
+  promoCodeId String? @map("promo_code_id")
 
   // Предбронирование
-  preBookedAt       DateTime?     @map("pre_booked_at")
-  preBookExpiresAt  DateTime?     @map("pre_book_expires_at")
+  preBookedAt      DateTime? @map("pre_booked_at")
+  preBookExpiresAt DateTime? @map("pre_book_expires_at")
 
   // Согласия
-  pdpConsent        Boolean       @default(false) @map("pdp_consent")
-  waiverConsent     Boolean       @default(false) @map("waiver_consent")
-  photoVideoConsent Boolean?      @map("photo_video_consent")
+  pdpConsent        Boolean  @default(false) @map("pdp_consent")
+  waiverConsent     Boolean  @default(false) @map("waiver_consent")
+  photoVideoConsent Boolean? @map("photo_video_consent")
 
-  selectedDayIds    Json?         @map("selected_day_ids") // ["uuid1", "uuid2"]
-  notes             String?       @db.Text
-  receiptUrl        String?       @map("receipt_url") @db.Text
+  selectedDayIds Json?   @map("selected_day_ids") // ["uuid1", "uuid2"]
+  notes          String? @db.Text
+  receiptUrl     String? @map("receipt_url") @db.Text
 
-  createdAt         DateTime      @default(now()) @map("created_at")
-  updatedAt         DateTime      @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  user              User          @relation(fields: [userId], references: [id])
-  camp              Camp          @relation(fields: [campId], references: [id])
-  promoCode         PromoCode?    @relation(fields: [promoCodeId], references: [id])
-  payments          Payment[]
+  user      User       @relation(fields: [userId], references: [id])
+  camp      Camp       @relation(fields: [campId], references: [id])
+  promoCode PromoCode? @relation(fields: [promoCodeId], references: [id])
+  payments  Payment[]
 
   @@index([userId])
   @@index([campId])
@@ -318,28 +321,28 @@ enum PaymentMethod {
 }
 
 model Payment {
-  id                  String         @id @default(uuid())
-  bookingId           String?        @map("booking_id")
-  userCourseId        String?        @map("user_course_id")
-  userId              String         @map("user_id")
+  id           String  @id @default(uuid())
+  bookingId    String? @map("booking_id")
+  userCourseId String? @map("user_course_id")
+  userId       String  @map("user_id")
 
-  yookassaPaymentId   String?        @unique @map("yookassa_payment_id") @db.VarChar(255)
-  amount              Int            // копейки
-  currency            String         @default("RUB") @db.VarChar(3)
-  status              PaymentStatus  @default(pending)
-  paymentMethod       PaymentMethod? @map("payment_method")
+  yookassaPaymentId String?        @unique @map("yookassa_payment_id") @db.VarChar(255)
+  amount            Int // копейки
+  currency          String         @default("RUB") @db.VarChar(3)
+  status            PaymentStatus  @default(pending)
+  paymentMethod     PaymentMethod? @map("payment_method")
 
-  description         String?        @db.Text
-  confirmationUrl     String?        @map("confirmation_url") @db.Text
-  metadata            Json?
+  description     String? @db.Text
+  confirmationUrl String? @map("confirmation_url") @db.Text
+  metadata        Json?
 
-  capturedAt          DateTime?      @map("captured_at")
-  createdAt           DateTime       @default(now()) @map("created_at")
+  capturedAt DateTime? @map("captured_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
-  user                User           @relation(fields: [userId], references: [id])
-  booking             Booking?       @relation(fields: [bookingId], references: [id])
-  userCourse          UserCourse?    @relation(fields: [userCourseId], references: [id])
-  installments        PaymentInstallment[]
+  user         User                 @relation(fields: [userId], references: [id])
+  booking      Booking?             @relation(fields: [bookingId], references: [id])
+  userCourse   UserCourse?          @relation(fields: [userCourseId], references: [id])
+  installments PaymentInstallment[]
 
   @@index([userId])
   @@index([status])
@@ -347,14 +350,14 @@ model Payment {
 }
 
 model PaymentInstallment {
-  id          String   @id @default(uuid())
-  paymentId   String   @map("payment_id")
-  amount      Int      // копейки
-  dueDate     DateTime @map("due_date") @db.Date
-  status      String   @db.VarChar(50)
-  paidAt      DateTime? @map("paid_at")
+  id        String    @id @default(uuid())
+  paymentId String    @map("payment_id")
+  amount    Int // копейки
+  dueDate   DateTime  @map("due_date") @db.Date
+  status    String    @db.VarChar(50)
+  paidAt    DateTime? @map("paid_at")
 
-  payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
   @@map("payment_installments")
 }
@@ -376,22 +379,22 @@ enum ApplicableTo {
 }
 
 model PromoCode {
-  id              String        @id @default(uuid())
-  code            String        @unique @db.VarChar(50)
-  discountType    DiscountType  @map("discount_type")
-  discountValue   Int           @map("discount_value")
-  maxUses         Int?          @map("max_uses")
-  usedCount       Int           @default(0) @map("used_count")
-  validFrom       DateTime      @map("valid_from")
-  validUntil      DateTime      @map("valid_until")
-  applicableTo    ApplicableTo  @map("applicable_to")
-  specificItemId  String?       @map("specific_item_id")
-  isActive        Boolean       @default(true) @map("is_active")
+  id               String       @id @default(uuid())
+  code             String       @unique @db.VarChar(50)
+  discountType     DiscountType @map("discount_type")
+  discountValue    Int          @map("discount_value")
+  maxUses          Int?         @map("max_uses")
+  usedCount        Int          @default(0) @map("used_count")
+  validFrom        DateTime     @map("valid_from")
+  validUntil       DateTime     @map("valid_until")
+  applicableTo     ApplicableTo @map("applicable_to")
+  specificItemId   String?      @map("specific_item_id")
+  isActive         Boolean      @default(true) @map("is_active")
   createdByAdminId String       @map("created_by_admin_id")
-  createdAt       DateTime      @default(now()) @map("created_at")
+  createdAt        DateTime     @default(now()) @map("created_at")
 
-  bookings        Booking[]
-  usages          PromoCodeUsage[]
+  bookings Booking[]
+  usages   PromoCodeUsage[]
 
   @@map("promo_codes")
 }
@@ -402,8 +405,8 @@ model PromoCodeUsage {
   userId      String   @map("user_id")
   usedAt      DateTime @default(now()) @map("used_at")
 
-  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
 
   @@map("promo_code_usages")
 }
@@ -432,35 +435,35 @@ enum CourseStatus {
 }
 
 model Course {
-  id                String         @id @default(uuid())
-  slug              String         @unique @db.VarChar(255)
-  title             String         @db.VarChar(255)
-  category          CourseCategory
-  description       String?        @db.Text
-  expectedResult    String?        @map("expected_result") @db.VarChar(255)
-  level             CourseLevel
-  durationWeeks     Int            @map("duration_weeks")
-  minutesPerDay     String?        @map("minutes_per_day") @db.VarChar(50)
-  price             Int            // копейки
-  installmentPrice  Int?           @map("installment_price")
-  coverImageUrl     String?        @map("cover_image_url") @db.Text
-  previewVideoUrl   String?        @map("preview_video_url") @db.Text
-  trainerId         String?        @map("trainer_id")
-  requirements      String?        @db.Text
-  suitableFor       Json?          @map("suitable_for")
-  notSuitableFor    Json?          @map("not_suitable_for")
-  refundDays        Int            @default(7) @map("refund_days")
-  status            CourseStatus   @default(draft)
-  rating            Decimal?       @db.Decimal(3, 2)
-  reviewsCount      Int            @default(0) @map("reviews_count")
-  isFeatured        Boolean        @default(false) @map("is_featured")
-  sortOrder         Int            @default(0) @map("sort_order")
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @updatedAt @map("updated_at")
+  id               String         @id @default(uuid())
+  slug             String         @unique @db.VarChar(255)
+  title            String         @db.VarChar(255)
+  category         CourseCategory
+  description      String?        @db.Text
+  expectedResult   String?        @map("expected_result") @db.VarChar(255)
+  level            CourseLevel
+  durationWeeks    Int            @map("duration_weeks")
+  minutesPerDay    String?        @map("minutes_per_day") @db.VarChar(50)
+  price            Int // копейки
+  installmentPrice Int?           @map("installment_price")
+  coverImageUrl    String?        @map("cover_image_url") @db.Text
+  previewVideoUrl  String?        @map("preview_video_url") @db.Text
+  trainerId        String?        @map("trainer_id")
+  requirements     String?        @db.Text
+  suitableFor      Json?          @map("suitable_for")
+  notSuitableFor   Json?          @map("not_suitable_for")
+  refundDays       Int            @default(7) @map("refund_days")
+  status           CourseStatus   @default(draft)
+  rating           Decimal?       @db.Decimal(3, 2)
+  reviewsCount     Int            @default(0) @map("reviews_count")
+  isFeatured       Boolean        @default(false) @map("is_featured")
+  sortOrder        Int            @default(0) @map("sort_order")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  trainer           Trainer?       @relation(fields: [trainerId], references: [id])
-  weeks             CourseWeek[]
-  userCourses       UserCourse[]
+  trainer     Trainer?     @relation(fields: [trainerId], references: [id])
+  weeks       CourseWeek[]
+  userCourses UserCourse[]
 
   @@index([category])
   @@index([status])
@@ -468,31 +471,31 @@ model Course {
 }
 
 model CourseWeek {
-  id          String       @id @default(uuid())
-  courseId    String       @map("course_id")
-  weekNumber  Int          @map("week_number")
-  title       String       @db.VarChar(255)
-  description String?      @db.Text
-  isFree      Boolean      @default(false) @map("is_free")
+  id          String  @id @default(uuid())
+  courseId    String  @map("course_id")
+  weekNumber  Int     @map("week_number")
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+  isFree      Boolean @default(false) @map("is_free")
 
-  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  days        CourseDay[]
+  course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  days   CourseDay[]
 
   @@unique([courseId, weekNumber])
   @@map("course_weeks")
 }
 
 model CourseDay {
-  id          String              @id @default(uuid())
-  weekId      String              @map("week_id")
-  dayNumber   Int                 @map("day_number")
-  title       String              @db.VarChar(255)
-  description String?             @db.Text
-  isFree      Boolean             @default(false) @map("is_free")
+  id          String  @id @default(uuid())
+  weekId      String  @map("week_id")
+  dayNumber   Int     @map("day_number")
+  title       String  @db.VarChar(255)
+  description String? @db.Text
+  isFree      Boolean @default(false) @map("is_free")
 
-  week        CourseWeek          @relation(fields: [weekId], references: [id], onDelete: Cascade)
-  exercises   CourseDayExercise[]
-  progress    UserDayProgress[]
+  week         CourseWeek          @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  exercises    CourseDayExercise[]
+  progress     UserDayProgress[]
   videoReviews VideoReview[]
 
   @@unique([weekId, dayNumber])
@@ -534,26 +537,26 @@ model Exercise {
   restSeconds          Int?               @map("rest_seconds")
   createdAt            DateTime           @default(now()) @map("created_at")
 
-  courseDayExercises   CourseDayExercise[]
-  userProgress         UserExerciseProgress[]
+  courseDayExercises CourseDayExercise[]
+  userProgress       UserExerciseProgress[]
 
   @@map("exercises")
 }
 
 model CourseDayExercise {
-  id            String       @id @default(uuid())
-  courseDayId   String       @map("course_day_id")
-  exerciseId    String       @map("exercise_id")
-  section       String       @db.VarChar(50) // warmup, main, plyometric, cooldown
-  orderIndex    Int          @map("order_index")
-  sets          Int?
-  reps          Int?
-  durationSecs  Int?         @map("duration_secs")
-  restSecs      Int?         @map("rest_secs")
-  notes         String?      @db.Text
+  id           String  @id @default(uuid())
+  courseDayId  String  @map("course_day_id")
+  exerciseId   String  @map("exercise_id")
+  section      String  @db.VarChar(50) // warmup, main, plyometric, cooldown
+  orderIndex   Int     @map("order_index")
+  sets         Int?
+  reps         Int?
+  durationSecs Int?    @map("duration_secs")
+  restSecs     Int?    @map("rest_secs")
+  notes        String? @db.Text
 
-  courseDay     CourseDay    @relation(fields: [courseDayId], references: [id], onDelete: Cascade)
-  exercise      Exercise     @relation(fields: [exerciseId], references: [id])
+  courseDay CourseDay @relation(fields: [courseDayId], references: [id], onDelete: Cascade)
+  exercise  Exercise  @relation(fields: [exerciseId], references: [id])
 
   @@unique([courseDayId, exerciseId, orderIndex])
   @@map("course_day_exercises")
@@ -570,24 +573,24 @@ enum UserCourseStatus {
 }
 
 model UserCourse {
-  id              String            @id @default(uuid())
-  userId          String            @map("user_id")
-  courseId        String            @map("course_id")
-  status          UserCourseStatus  @default(active)
-  tier            String?           @db.VarChar(50) // review_lite / review_pro / full_coaching
-  progress        Int               @default(0) // процент
-  currentWeek     Int               @default(1) @map("current_week")
-  currentDay      Int               @default(1) @map("current_day")
-  startedAt       DateTime          @default(now()) @map("started_at")
-  completedAt     DateTime?         @map("completed_at")
-  lastActivityAt  DateTime?         @map("last_activity_at")
+  id             String           @id @default(uuid())
+  userId         String           @map("user_id")
+  courseId       String           @map("course_id")
+  status         UserCourseStatus @default(active)
+  tier           String?          @db.VarChar(50) // review_lite / review_pro / full_coaching
+  progress       Int              @default(0) // процент
+  currentWeek    Int              @default(1) @map("current_week")
+  currentDay     Int              @default(1) @map("current_day")
+  startedAt      DateTime         @default(now()) @map("started_at")
+  completedAt    DateTime?        @map("completed_at")
+  lastActivityAt DateTime?        @map("last_activity_at")
 
-  user            User              @relation(fields: [userId], references: [id])
-  course          Course            @relation(fields: [courseId], references: [id])
-  dayProgress     UserDayProgress[]
+  user             User                   @relation(fields: [userId], references: [id])
+  course           Course                 @relation(fields: [courseId], references: [id])
+  dayProgress      UserDayProgress[]
   exerciseProgress UserExerciseProgress[]
-  videoReviews    VideoReview[]
-  payments        Payment[]
+  videoReviews     VideoReview[]
+  payments         Payment[]
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -596,46 +599,46 @@ model UserCourse {
 }
 
 model UserDayProgress {
-  id            String      @id @default(uuid())
-  userCourseId  String      @map("user_course_id")
-  courseDayId   String      @map("course_day_id")
-  isCompleted   Boolean     @default(false) @map("is_completed")
-  rpe           Int?        // 1-10
-  completedAt   DateTime?   @map("completed_at")
+  id           String    @id @default(uuid())
+  userCourseId String    @map("user_course_id")
+  courseDayId  String    @map("course_day_id")
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  rpe          Int? // 1-10
+  completedAt  DateTime? @map("completed_at")
 
-  userCourse    UserCourse  @relation(fields: [userCourseId], references: [id], onDelete: Cascade)
-  courseDay     CourseDay   @relation(fields: [courseDayId], references: [id])
+  userCourse UserCourse @relation(fields: [userCourseId], references: [id], onDelete: Cascade)
+  courseDay  CourseDay  @relation(fields: [courseDayId], references: [id])
 
   @@unique([userCourseId, courseDayId])
   @@map("user_day_progress")
 }
 
 model UserExerciseProgress {
-  id            String      @id @default(uuid())
-  userCourseId  String      @map("user_course_id")
-  exerciseId    String      @map("exercise_id")
-  isViewed      Boolean     @default(false) @map("is_viewed")
-  isCompleted   Boolean     @default(false) @map("is_completed")
-  viewedAt      DateTime?   @map("viewed_at")
-  completedAt   DateTime?   @map("completed_at")
+  id           String    @id @default(uuid())
+  userCourseId String    @map("user_course_id")
+  exerciseId   String    @map("exercise_id")
+  isViewed     Boolean   @default(false) @map("is_viewed")
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  viewedAt     DateTime? @map("viewed_at")
+  completedAt  DateTime? @map("completed_at")
 
-  userCourse    UserCourse  @relation(fields: [userCourseId], references: [id], onDelete: Cascade)
-  exercise      Exercise    @relation(fields: [exerciseId], references: [id])
+  userCourse UserCourse @relation(fields: [userCourseId], references: [id], onDelete: Cascade)
+  exercise   Exercise   @relation(fields: [exerciseId], references: [id])
 
   @@unique([userCourseId, exerciseId])
   @@map("user_exercise_progress")
 }
 
 model TestResult {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  testType    String   @db.VarChar(50) // CMJ, spike_height, etc
-  value       Decimal  @db.Decimal(10, 2)
-  unit        String   @db.VarChar(20) // cm, kg, sec
-  notes       String?  @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  testType  String   @db.VarChar(50) // CMJ, spike_height, etc
+  value     Decimal  @db.Decimal(10, 2)
+  unit      String   @db.VarChar(20) // cm, kg, sec
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, testType])
   @@map("test_results")
@@ -661,10 +664,10 @@ model VideoReview {
   reviewedAt      DateTime?         @map("reviewed_at")
   createdAt       DateTime          @default(now()) @map("created_at")
 
-  user            User              @relation("StudentReviews", fields: [userId], references: [id])
-  trainer         User              @relation("TrainerReviews", fields: [trainerId], references: [id])
-  userCourse      UserCourse        @relation(fields: [userCourseId], references: [id])
-  courseDay       CourseDay         @relation(fields: [courseDayId], references: [id])
+  user       User       @relation("StudentReviews", fields: [userId], references: [id])
+  trainer    User       @relation("TrainerReviews", fields: [trainerId], references: [id])
+  userCourse UserCourse @relation(fields: [userCourseId], references: [id])
+  courseDay  CourseDay  @relation(fields: [courseDayId], references: [id])
 
   @@index([trainerId, status])
   @@map("video_reviews")
@@ -675,30 +678,30 @@ model VideoReview {
 // ════════════════════════════════════════════════════════════
 
 model Notification {
-  id          String    @id @default(uuid())
-  userId      String    @map("user_id")
-  title       String    @db.VarChar(255)
-  body        String    @db.Text
-  type        String    @db.VarChar(50)
-  actionUrl   String?   @map("action_url") @db.Text
-  isRead      Boolean   @default(false) @map("is_read")
-  sentAt      DateTime  @default(now()) @map("sent_at")
-  readAt      DateTime? @map("read_at")
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  title     String    @db.VarChar(255)
+  body      String    @db.Text
+  type      String    @db.VarChar(50)
+  actionUrl String?   @map("action_url") @db.Text
+  isRead    Boolean   @default(false) @map("is_read")
+  sentAt    DateTime  @default(now()) @map("sent_at")
+  readAt    DateTime? @map("read_at")
 
-  user        User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId, isRead])
   @@map("notifications")
 }
 
 model NotificationTemplate {
-  id          String   @id @default(uuid())
-  name        String   @unique @db.VarChar(100)
-  title       String   @db.VarChar(255)
-  body        String   @db.Text
-  variables   Json?    // ["userName", "campTitle"]
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(uuid())
+  name      String   @unique @db.VarChar(100)
+  title     String   @db.VarChar(255)
+  body      String   @db.Text
+  variables Json? // ["userName", "campTitle"]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("notification_templates")
 }
@@ -708,27 +711,27 @@ model NotificationTemplate {
 // ════════════════════════════════════════════════════════════
 
 model EnsoLevel {
-  id          String   @id @default(uuid())
-  name        String   @unique @db.VarChar(50) // Shoshin, Shugyosha, Jukuren, Satori
-  description String?  @db.Text
-  minPoints   Int      @map("min_points")
-  maxPoints   Int?     @map("max_points")
-  iconUrl     String?  @map("icon_url") @db.Text
-  orderIndex  Int      @map("order_index")
+  id          String  @id @default(uuid())
+  name        String  @unique @db.VarChar(50) // Shoshin, Shugyosha, Jukuren, Satori
+  description String? @db.Text
+  minPoints   Int     @map("min_points")
+  maxPoints   Int?    @map("max_points")
+  iconUrl     String? @map("icon_url") @db.Text
+  orderIndex  Int     @map("order_index")
 
-  users       User[]
+  users User[]
 
   @@map("enso_levels")
 }
 
 model UserAchievement {
-  id            String   @id @default(uuid())
-  userId      String   @map("user_id")
-  type        String   @db.VarChar(50) // camps_attended, course_completed
-  value       Int
-  earnedAt    DateTime @default(now()) @map("earned_at")
+  id       String   @id @default(uuid())
+  userId   String   @map("user_id")
+  type     String   @db.VarChar(50) // camps_attended, course_completed
+  value    Int
+  earnedAt DateTime @default(now()) @map("earned_at")
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@map("user_achievements")
@@ -742,7 +745,7 @@ model MerchProduct {
   id          String   @id @default(uuid())
   title       String   @db.VarChar(255)
   description String?  @db.Text
-  price       Int      // копейки
+  price       Int // копейки
   imageUrl    String?  @map("image_url") @db.Text
   isAvailable Boolean  @default(true) @map("is_available")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -753,7 +756,7 @@ model MerchProduct {
 model MerchOrder {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
-  items       Json     // [{"productId": "...", "quantity": 2}]
+  items       Json // [{"productId": "...", "quantity": 2}]
   totalAmount Int      @map("total_amount")
   status      String   @db.VarChar(50)
   createdAt   DateTime @default(now()) @map("created_at")
@@ -771,7 +774,7 @@ model OfflineTraining {
   date        DateTime @db.Date
   time        DateTime @db.Time
   location    String   @db.VarChar(255)
-  price       Int      // копейки
+  price       Int // копейки
   maxSlots    Int      @map("max_slots")
   bookedSlots Int      @default(0) @map("booked_slots")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -784,17 +787,17 @@ model OfflineTraining {
 // ════════════════════════════════════════════════════════════
 
 model AuditLog {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  action      String   @db.VarChar(100)
-  entityType  String   @map("entity_type") @db.VarChar(50)
-  entityId    String?  @map("entity_id")
-  changes     Json?
-  ipAddress   String?  @map("ip_address") @db.VarChar(45)
-  userAgent   String?  @map("user_agent") @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id")
+  changes    Json?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([entityType, entityId])
@@ -818,7 +821,7 @@ model WaitlistEntry {
 model VerificationCode {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  type      String   // "phone" or "email"
+  type      String // "phone" or "email"
   code      String   @db.VarChar(10)
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
@@ -841,4 +844,11 @@ model ChatMessage {
   user User @relation(fields: [userId], references: [id])
 
   @@map("chat_messages")
+}
+
+model Setting {
+  key   String @id
+  value Json
+
+  @@map("settings")
 }

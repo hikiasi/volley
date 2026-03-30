@@ -9,13 +9,11 @@ export default async function CampsPage({ searchParams }: { searchParams: { [key
     getUniqueCampCities()
   ]);
 
-  // Serialize data before passing to client component
   const serializedCamps = camps.map(camp => ({
     ...camp,
     startDate: camp.startDate.toISOString(),
-    createdAt: camp.createdAt.toISOString(),
-    updatedAt: camp.updatedAt.toISOString(),
-    // Convert any other non-serializable fields if necessary
+    endDate: camp.endDate ? camp.endDate.toISOString() : null,
+    earlyBirdCutoff: camp.earlyBirdCutoff ? camp.earlyBirdCutoff.toISOString() : null,
   }));
 
   return (

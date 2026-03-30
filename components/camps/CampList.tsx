@@ -3,24 +3,10 @@
 import Link from "next/link";
 import { useState } from 'react';
 import { cn } from "@/lib/utils";
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { ChevronLeft, Filter, Search, MapPin, CalendarDays } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-// Define the type for a single camp object
-type Camp = {
-  id: string;
-  slug: string;
-  title: string;
-  city: string;
-  coverImageUrl?: string | null;
-  startDate: string; // Dates will be passed as strings
-  basePrice: number;
-  maxParticipants: number;
-  currentParticipants: number;
-};
+import { CampCard } from "@/components/camp-card"; // Import the actual CampCard
+import type { Camp } from '@prisma/client'; // Import the full type from Prisma
 
 // Define the props for the CampList component
 type CampListProps = {
@@ -87,37 +73,11 @@ export function CampList({ initialCamps, cities, activeCity }: CampListProps) {
           ))}
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
           {filteredCamps.length > 0 ? (
-            filteredCamps.map((camp) => {
-              const fillPercentage = Math.round((camp.currentParticipants / camp.maxParticipants) * 100);
-              return (
-                <Link href={`/camps/${camp.slug}`} key={camp.id} className="block bg-v-card rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-colors overflow-hidden">
-                  <div className="w-full h-32 bg-zinc-900">
-                    <img src={camp.coverImageUrl || `https://source.unsplash.com/random/400x225?volleyball,${camp.id}`} alt={camp.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-bold mb-1">{camp.title}</h3>
-                      <span className="text-sm font-bold text-v-accent">{(camp.basePrice / 100).toLocaleString('ru-RU')} ₽</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-v-text-muted text-xs mb-3">
-                        <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {camp.city}</div>
-                        <div className="flex items-center gap-1.5"><CalendarDays className="w-3 h-3" /> {format(new Date(camp.startDate), 'd MMMM', { locale: ru })}</div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-medium text-v-text-muted">
-                          <span>Заполнено {fillPercentage}%</span>
-                          <span>Осталось {camp.maxParticipants - camp.currentParticipants}</span>
-                      </div>
-                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
-                          <div className="bg-v-green h-1.5 rounded-full" style={{width: `${fillPercentage}%`}}></div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })
+            filteredCamps.map((camp) => (
+              <CampCard key={camp.id} camp={camp} />
+            ))
           ) : (
             <div className="text-center py-20 bg-v-card rounded-2xl border border-zinc-800">
               <div className="text-4xl mb-4">🏐</div>

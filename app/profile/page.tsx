@@ -73,6 +73,15 @@ export default async function ProfilePage() {
   const ensoProgress = Math.round((ensoPoints / nextLevelPoints) * 100);
   const strokeDashoffset = 251.2 * (1 - ensoProgress / 100);
 
+  const getRussianStatus = (status: string) => {
+    switch (status) {
+      case 'pre_booked': return 'Предбронь';
+      case 'deposit_paid': return 'Депозит внесен';
+      case 'fully_paid': return 'Оплачено';
+      default: return status;
+    }
+  };
+
   return (
     <main className="max-w-md mx-auto px-4 pt-6 pb-28">
       <header className="flex items-center justify-between mb-8">
@@ -139,7 +148,7 @@ export default async function ProfilePage() {
                   <h3 className="font-bold">{booking.camp.title}</h3>
                   <p className="text-xs text-v-text-muted">{new Date(booking.camp.startDate).toLocaleDateString('ru-RU', { month: 'long', day: 'numeric' })} - {new Date(booking.camp.endDate).toLocaleDateString('ru-RU', { day: 'numeric' })}</p>
                 </div>
-                <Badge variant={booking.status === 'fully_paid' ? 'default' : 'secondary'}>{booking.status}</Badge>
+                <Badge variant={booking.status === 'fully_paid' ? 'default' : 'secondary'}>{getRussianStatus(booking.status)}</Badge>
               </div>
             </Link>
           ))}

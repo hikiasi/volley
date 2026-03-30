@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
-  ChevronLeft, MapPin, Users, ClipboardList, ListChecks, PackageCheck
+  ChevronLeft, MapPin, Users, ClipboardList, ListChecks, PackageCheck, Flame
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CampCheckoutActions } from "@/components/camps/CampCheckoutActions";
@@ -50,6 +50,10 @@ export default async function CampDetailPage({ params }: { params: { slug: strin
   const isBooked = booking && (booking.status === 'fully_paid' || booking.status === 'deposit_paid');
   const isPreBooked = booking && booking.status === 'pre_booked';
 
+  const now = new Date();
+  const isEarlyBirdActive = camp.earlyBirdPrice && camp.earlyBirdCutoff && now < new Date(camp.earlyBirdCutoff);
+  const currentPrice = isEarlyBirdActive ? camp.earlyBirdPrice : camp.basePrice;
+
   return (
     <div className="min-h-screen bg-v-dark text-white pb-32">
         <header className="absolute top-0 left-0 right-0 z-10 p-4 flex items-center justify-between">
@@ -75,6 +79,20 @@ export default async function CampDetailPage({ params }: { params: { slug: strin
             </div>
             <div className="w-full bg-zinc-800 rounded-full h-2">
                 <div className="bg-v-green h-2 rounded-full" style={{width: `${occupancy}%`}}></div>
+            </div>
+        </div>
+
+        <div className="bg-v-card rounded-2xl p-4 border border-zinc-800 flex justify-between items-baseline">
+            <span className="text-sm font-bold text-v-text-muted">ЦЕНА</span>
+            <div className="text-right">
+                {isEarlyBirdActive && (
+                    <div className="flex items-center justify-end gap-2 text-v-green">
+                        <Flame className="w-4 h-4" />
+                        <span className="text-sm font-bold">Ранняя цена!</span>
+                        <span className="text-sm line-through text-v-text-muted/50">{(camp.basePrice / 100).toLocaleString('ru-RU')} ₽</span>
+                    </div>
+                )}
+                <p className="text-3xl font-black text-v-green">{(currentPrice / 100).toLocaleString('ru-RU')} ₽</p>
             </div>
         </div>
 
@@ -154,6 +172,23 @@ export default async function CampDetailPage({ params }: { params: { slug: strin
               </ul>
             </AccordionContent>
           </AccordionItem>
+          
+          {camp.customSections && (camp.customSections as Array<{title: string, content: string}>).map((section, index) => (
+            <AccordionItem key={index} value={`custom-${index}`} className="border-none bg-v-card rounded-2xl px-4">
+              <AccordionTrigger className="text-base font-bold hover:no-underline">
+                  <div className="flex items-center gap-3">
+                      <ListChecks className="w-5 h-5 text-v-accent"/>
+                      <span>{section.title}</span>
+                  </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="prose prose-invert prose-sm max-w-none">
+                  {section.content}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+
         </Accordion>
       </div>
 

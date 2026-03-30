@@ -23,9 +23,24 @@ export async function getCamps(filters: {
   const camps = await prisma.camp.findMany({
     where,
     orderBy,
-    include: {
+    // Explicitly select all fields needed by components
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      city: true,
+      level: true,
+      startDate: true,
+      basePrice: true,
+      maxParticipants: true,
+      currentParticipants: true,
+      coverImageUrl: true,
+      hotMessage: true,
+      earlyBirdPrice: true,
+      earlyBirdCutoff: true,
+      status: true,
       trainers: {
-        include: {
+        select: {
           trainer: true,
         },
       },
@@ -37,17 +52,35 @@ export async function getCamps(filters: {
 export async function getCampBySlug(slug: string) {
   const camp = await prisma.camp.findUnique({
     where: { slug },
-    include: {
-      trainers: {
-        include: {
-          trainer: true,
+    // Explicitly select all fields needed by components
+    select: {
+        id: true,
+        slug: true,
+        title: true,
+        description: true,
+        level: true,
+        city: true,
+        startDate: true,
+        endDate: true,
+        basePrice: true,
+        maxParticipants: true,
+        currentParticipants: true,
+        coverImageUrl: true,
+        whatsIncluded: true,
+        customSections: true,
+        earlyBirdPrice: true,
+        earlyBirdCutoff: true,
+        status: true,
+        trainers: {
+            select: {
+              trainer: true,
+            },
         },
-      },
-      days: {
-        orderBy: {
-            dayNumber: 'asc'
-        }
-      },
+        days: {
+            orderBy: {
+                dayNumber: 'asc'
+            }
+        },
     },
   });
   return camp;
@@ -63,6 +96,15 @@ export async function getNearestUpcomingCamp() {
         },
         orderBy: {
             startDate: 'asc'
+        },
+        // Explicitly select all fields needed by components
+        select: {
+            id: true,
+            slug: true,
+            city: true,
+            startDate: true,
+            maxParticipants: true,
+            currentParticipants: true,
         }
     });
     return camp;

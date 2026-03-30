@@ -16,6 +16,14 @@ export async function POST(
     const user = await prisma.user.findUnique({ where: { id: userPayload.sub as string }});
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
+    // TZ Requirement: Check if email or phone is present before first payment
+    if (!user.email && !user.phone) {
+        return NextResponse.json({ 
+            error: "User profile is incomplete. Email or phone required.", 
+            code: "PROFILE_INCOMPLETE" 
+        }, { status: 409 });
+    }
+
     const body = await req.json();
     const { paymentType, promoCodeId, selectedDayIds, pdpConsent, waiverConsent } = body as {
       paymentType: "full" | "deposit" | "installment",
@@ -31,8 +39,15 @@ export async function POST(
 
     if (!camp) return NextResponse.json({ error: "Camp not found" }, { status: 404 });
 
+    // Determine the correct base price (check for early bird)
+    const now = new Date();
+    let currentBasePrice = camp.basePrice;
+    if (camp.earlyBirdPrice && camp.earlyBirdCutoff && now < camp.earlyBirdCutoff) {
+      currentBasePrice = camp.earlyBirdPrice;
+    }
+
     // Calculate final amount
-    let totalAmount = paymentType === 'deposit' ? (camp.depositAmount || camp.basePrice) : camp.basePrice;
+    let totalAmount = paymentType === 'deposit' ? (camp.depositAmount || currentBasePrice) : currentBasePrice;
 
     if (promoCodeId) {
       const promo = await prisma.promoCode.findUnique({ where: { id: promoCodeId } });

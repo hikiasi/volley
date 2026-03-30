@@ -5,9 +5,20 @@ import { LogOut, Shield } from "lucide-react";
 
 export function ProfileClientActions({ isAdmin }: { isAdmin: boolean }) {
   
-  const handleLogout = () => {
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    window.location.href = "/auth/login";
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        window.location.href = "/auth/login";
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("An error occurred during logout:", error);
+    }
   };
 
   return (

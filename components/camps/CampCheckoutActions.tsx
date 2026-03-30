@@ -14,6 +14,10 @@ export function CampCheckoutActions({ camp, isPreBooked }: { camp: Camp, isPreBo
   const { setIsBottomNavVisible } = useLayout();
   const router = useRouter();
 
+  const now = new Date();
+  const isEarlyBirdActive = camp.earlyBirdPrice && camp.earlyBirdCutoff && now < new Date(camp.earlyBirdCutoff);
+  const currentPrice = isEarlyBirdActive ? camp.earlyBirdPrice : camp.basePrice;
+
   useEffect(() => {
     setIsBottomNavVisible(!showCheckout);
   }, [showCheckout, setIsBottomNavVisible]);
@@ -27,6 +31,14 @@ export function CampCheckoutActions({ camp, isPreBooked }: { camp: Camp, isPreBo
         const data = await res.json();
         successCallback(data);
       } else {
+        if (res.status === 409) {
+            const errorData = await res.json();
+            if (errorData.code === "PROFILE_INCOMPLETE") {
+                // Silently redirect to profile edit page for user to complete their info
+                router.push('/profile/edit?reason=incomplete');
+                return; // Stop further execution
+            }
+        }
         let errorMessage = 'Произошла ошибка на сервере.';
         try {
           const error = await res.json();
@@ -119,7 +131,7 @@ export function CampCheckoutActions({ camp, isPreBooked }: { camp: Camp, isPreBo
                     className={`w-full p-4 rounded-xl border-2 transition-all flex justify-between items-center ${paymentType === 'full' ? 'border-v-accent' : 'border-zinc-800 bg-white/5'}`}
                  >
                    <span className="text-sm font-bold uppercase italic">Полная оплата</span>
-                   <span className="text-lg font-bold italic">{(camp.basePrice / 100).toLocaleString()} ₽</span>
+                   <span className="text-lg font-bold italic">{(currentPrice / 100).toLocaleString()} ₽</span>
                  </button>
                  {camp.depositAmount && (
                     <button

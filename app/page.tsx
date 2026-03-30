@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getNearestUpcomingCamp } from "@/lib/camps";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { prisma } from "@/lib/db";
 import {
   BookOpen,
   CalendarDays,
@@ -14,24 +15,41 @@ import {
   User,
   Users2,
   ChevronRight,
+  Flame
 } from "lucide-react";
 
 // Helper for the main navigation grid
 const navItems = [
   { icon: BookOpen, label: "Манифест", href: "/manifest" },
-  { icon: CalendarDays, label: "Кэмпы", href: "/camps", badge: "3" },
+  { icon: CalendarDays, label: "Кэмпы", href: "/camps" },
   { icon: CircleDot, label: "Путь Энсо", href: "/profile" },
   { icon: BarChart3, label: "Атлетизм", href: "/courses" },
   { icon: MessagesSquare, label: "Консультации", href: "/consultations" },
   { icon: Users, label: "Офлайн", href: "/offline" },
-  { icon: Bell, label: "Новости", href: "/news", badge: "2" },
-  { icon: Shirt, label: "Мерч", href: "/merch", badge: "NEW" },
+  { icon: Bell, label: "Новости", href: "/news" },
+  { icon: Shirt, label: "Мерч", href: "/merch" },
   { icon: User, label: "Профиль", href: "/profile" },
 ];
 
+async function getPageData() {
+    const nearestCamp = await getNearestUpcomingCamp();
+    const settingsRaw = await prisma.setting.findMany({
+        where: { key: { in: ['community_banner', 'hot_sale_banner'] } }
+    });
+    const settings = settingsRaw.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+    }, {} as Record<string, any>);
+
+    return { nearestCamp, settings };
+}
+
 export default async function Home() {
-  const nearestCamp = await getNearestUpcomingCamp();
+  const { nearestCamp, settings } = await getPageData();
   const occupancy = nearestCamp ? Math.round((nearestCamp.currentParticipants / nearestCamp.maxParticipants) * 100) : 0;
+  
+  const communityBanner = settings.community_banner as { text: string } | undefined;
+  const hotSaleBanner = settings.hot_sale_banner as { text: string; link: string; isActive: boolean } | undefined;
 
   return (
     <div className="p-4 flex flex-col items-center min-h-screen bg-v-dark text-white">
@@ -47,22 +65,26 @@ export default async function Home() {
         <p className="text-sm font-light tracking-tight mt-1">ты решаешь как играть и жить</p>
       </header>
 
-      {/* Community Info Box */}
-      <section className="w-full max-w-sm mb-6">
-        <div className="bg-v-card rounded-2xl p-4 border border-zinc-800">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 bg-v-green/10 flex items-center justify-center rounded-lg">
-                <Users2 className="w-6 h-6 text-v-green" />
+      {/* Dynamic Banners */}
+      <section className="w-full max-w-sm mb-6 space-y-3">
+        {communityBanner?.text && (
+            <div className="bg-v-card rounded-2xl p-4 border border-zinc-800 flex items-center gap-3">
+                <div className="w-10 h-10 bg-v-green/10 flex items-center justify-center rounded-lg">
+                    <Users2 className="w-6 h-6 text-v-green" />
+                </div>
+                <h2 className="text-lg font-medium">Сообщество: <span className="font-bold">{communityBanner.text}</span></h2>
             </div>
-            <div>
-              <h2 className="text-lg font-medium">Сообщество: <span className="font-bold">12 540</span> участников</h2>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="w-2 h-2 rounded-full bg-v-accent"></span>
-            <p className="text-xs text-v-text-muted">HOT – Скидка -10% на «Power Jump»</p>
-          </div>
-        </div>
+        )}
+        {hotSaleBanner?.isActive && (
+            <Link href={hotSaleBanner.link || '#'} className="block bg-v-card rounded-2xl p-4 border border-v-accent/50 hover:bg-zinc-900 transition-colors">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-v-accent/10 flex items-center justify-center rounded-lg">
+                        <Flame className="w-6 h-6 text-v-accent" />
+                    </div>
+                    <p className="text-sm font-bold text-white leading-tight">{hotSaleBanner.text}</p>
+                </div>
+            </Link>
+        )}
       </section>
 
       {/* Grid Menu */}

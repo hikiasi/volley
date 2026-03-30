@@ -7,7 +7,19 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
-    const user = await prisma.user.findFirst({ where: { email } });
+    const user = await prisma.user.findFirst({ 
+        where: { email },
+        select: {
+            id: true,
+            password: true,
+            role: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            photoUrl: true,
+        }
+    });
+
     if (!user || !user.password) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
@@ -24,9 +36,12 @@ export async function POST(req: NextRequest) {
       .setExpirationTime(process.env.JWT_EXPIRES_IN || "7d")
       .sign(secret);
 
+    // Create a user object for the response, omitting the password
+    const { password: _, ...userWithoutPassword } = user;
+
     const response = NextResponse.json({
       token,
-      user: { id: user.id, email: user.email, firstName: user.firstName }
+      user: userWithoutPassword
     });
 
     // Calculate expiration in seconds for cookie (7 days)
